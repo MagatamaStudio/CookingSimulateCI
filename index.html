@@ -435,6 +435,18 @@ body.is-resizing *{cursor:row-resize !important}
   font:11px var(--mono); padding:1px 5px; border-radius:4px;
   background:rgba(255,255,255,.05); color:var(--muted);
 }
+.presets{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.presets-label{
+  font:600 10.5px var(--mono); color:var(--dim); letter-spacing:.1em;
+  text-transform:uppercase; white-space:nowrap;
+}
+.preset-list{display:flex; flex-wrap:wrap; gap:6px}
+.preset-chip{
+  padding:3px 10px; font-size:11.5px; color:var(--muted);
+  background:rgba(255,255,255,.02); border-color:var(--border);
+}
+.preset-chip:hover:not(:disabled){background:rgba(88,166,255,.1); border-color:rgba(88,166,255,.35); color:var(--blue)}
+.preset-chip.is-active{background:rgba(88,166,255,.12); border-color:rgba(88,166,255,.4); color:var(--blue)}
 textarea{
   width:100%; height:52vh; min-height:240px; resize:vertical; padding:12px 14px;
   border-radius:var(--radius); border:1px solid var(--border);
@@ -579,7 +591,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       <output id="speedVal" for="speed">1×</output>
     </label>
     <span class="toolbar-sep" aria-hidden="true"></span>
-    <button id="editBtn" type="button" title="编辑 workflow 配置">编辑</button>
+    <button id="editBtn" type="button" title="编辑 workflow / 载入其他菜品示例">编辑 / 示例</button>
     <button id="resetBtn" type="button" title="重置状态与日志">重置</button>
     <button class="primary run-btn" id="runBtn" type="button">
       <span class="run-icon" id="runIcon" aria-hidden="true">▶</span>
@@ -647,10 +659,14 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
     <div class="modal-head">
       <div>
-        <h2 id="editorTitle">编辑 workflow</h2>
-        <p class="modal-sub">JSON 格式 · 应用后会保存到本地浏览器</p>
+        <h2 id="editorTitle">编辑 workflow / 示例</h2>
+        <p class="modal-sub">JSON 格式 · 可载入示例菜品 · 应用后会保存到本地浏览器</p>
       </div>
       <button class="modal-close" id="closeEdit" type="button" aria-label="关闭编辑弹窗">✕</button>
+    </div>
+    <div class="presets" role="group" aria-label="示例菜品">
+      <span class="presets-label">示例菜品</span>
+      <div class="preset-list" id="presetList"></div>
     </div>
     <div class="hint">
       顶层：<code>name</code> <code>on</code> <code>jobs</code>　·　
@@ -765,6 +781,266 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   };
 
   /* ========================================================================
+     2.1 其他菜品示例 workflow
+     ======================================================================== */
+  const DISH_PRESETS = [
+    {
+      id: "noodle",
+      label: "煮一碗面",
+      describe: "完整 CI：checkout → lint/build/test → staging → production",
+      workflow: DEFAULT_WORKFLOW
+    },
+    {
+      id: "tomato-egg",
+      label: "番茄炒蛋",
+      describe: "备料 → 热锅 → 翻炒 → 调味 → 装盘",
+      workflow: {
+        name: "番茄炒蛋",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep",
+            name: "备料",
+            needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4",                     ms: 500 },
+              { name: "准备炒锅",   run: "actions/setup-kitchen@v2 --wok 32cm",       ms: 500 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore eggs-tomatoes", ms: 600 },
+              { name: "洗番茄",     run: "wash --veg tomato --count 3",               ms: 600 },
+              { name: "打鸡蛋",     run: "beat --eggs 4 --smooth",                    ms: 700 }
+            ]
+          },
+          {
+            id: "heat",
+            name: "热锅",
+            needs: ["prep"],
+            steps: [
+              { name: "拉取炒锅镜像", run: "docker pull kitchen/wok:latest", ms: 600 },
+              { name: "热油",         run: "heat --level high --oil 2tbsp",  ms: 900 },
+              { name: "确认油温",     run: "verify --smoke-point",           ms: 600 }
+            ]
+          },
+          {
+            id: "fry",
+            name: "翻炒",
+            needs: ["heat"],
+            steps: [
+              { name: "炒蛋",     run: "scramble --eggs --soft",    ms: 900 },
+              { name: "盛出鸡蛋", run: "remove --dish egg",         ms: 500 },
+              { name: "炒番茄",   run: "stir-fry --tomato --juice", ms: 1100 },
+              { name: "混合",     run: "combine --egg --tomato",    ms: 700 }
+            ]
+          },
+          {
+            id: "season",
+            name: "调味",
+            needs: ["fry"],
+            steps: [
+              { name: "调味", run: "season --salt 1tsp --sugar 1tsp", ms: 600 },
+              { name: "尝味", run: "taste --balance",                 ms: 600 }
+            ]
+          },
+          {
+            id: "serve",
+            name: "装盘",
+            needs: ["season"],
+            steps: [
+              { name: "装盘", run: "plate --garnish scallion", ms: 600 },
+              { name: "上桌", run: "notify --channel dinner",  ms: 500 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "fried-rice",
+      label: "蛋炒饭",
+      describe: "备料 → 处理米饭 → 炒饭 → 调味 → 装碗",
+      workflow: {
+        name: "蛋炒饭",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep",
+            name: "备料",
+            needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4",                       ms: 500 },
+              { name: "准备炒锅",   run: "actions/setup-kitchen@v2 --wok 30cm",         ms: 500 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore overnight-rice",   ms: 600 },
+              { name: "切配菜",     run: "dice --carrot --ham --scallion",              ms: 800 }
+            ]
+          },
+          {
+            id: "rice",
+            name: "处理米饭",
+            needs: ["prep"],
+            steps: [
+              { name: "摊凉米饭", run: "cool --rice --spread", ms: 800 },
+              { name: "打散结块", run: "break --clumps --fork", ms: 600 }
+            ]
+          },
+          {
+            id: "fry",
+            name: "炒饭",
+            needs: ["rice"],
+            steps: [
+              { name: "炒蛋",     run: "scramble --eggs --large-curd", ms: 800 },
+              { name: "下饭翻炒", run: "add --rice --veg --ham",       ms: 1000 },
+              { name: "爆炒出锅气", run: "wok-hei --high 30s",          ms: 900 },
+              { name: "酱油调味", run: "season --soy 1tbsp",            ms: 600 }
+            ]
+          },
+          {
+            id: "taste",
+            name: "试味",
+            needs: ["fry"],
+            steps: [
+              { name: "尝咸淡",   run: "taste --salt",      ms: 600 },
+              { name: "调整葱花", run: "adjust --scallion", ms: 500 }
+            ]
+          },
+          {
+            id: "serve",
+            name: "装碗",
+            needs: ["taste"],
+            steps: [
+              { name: "装碗",     run: "plate --bowl",            ms: 500 },
+              { name: "拍照打卡", run: "notify --channel dinner", ms: 500 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "dumplings",
+      label: "包饺子",
+      describe: "和面 → 调馅 → 包饺子 → 下水饺 → 上桌",
+      workflow: {
+        name: "包饺子",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep",
+            name: "备料",
+            needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4",                  ms: 500 },
+              { name: "准备案板",   run: "actions/setup-kitchen@v2 --board",       ms: 500 },
+              { name: "取面粉",     run: "actions/cache@v4 --restore flour",       ms: 600 },
+              { name: "和面",       run: "knead --flour 500g --water 250ml",       ms: 900 },
+              { name: "醒面",       run: "rest --dough 30min",                     ms: 1200 }
+            ]
+          },
+          {
+            id: "filling",
+            name: "调馅",
+            needs: ["prep"],
+            steps: [
+              { name: "剁馅", run: "chop --cabbage --pork", ms: 900 },
+              { name: "拌馅", run: "mix --seasoning",       ms: 800 },
+              { name: "尝馅", run: "taste --filling",       ms: 600 }
+            ]
+          },
+          {
+            id: "wrap",
+            name: "包饺子",
+            needs: ["prep", "filling"],
+            steps: [
+              { name: "擀皮",   run: "roll --wrapper",     ms: 900 },
+              { name: "包饺子", run: "fold --pleats 12",   ms: 1200 },
+              { name: "摆盘",   run: "arrange --tray",     ms: 600 }
+            ]
+          },
+          {
+            id: "boil",
+            name: "下水饺",
+            needs: ["wrap"],
+            steps: [
+              { name: "烧水",   run: "boil --water",    ms: 900 },
+              { name: "下锅",   run: "add --dumplings", ms: 700 },
+              { name: "点冷水", run: "check --float",   ms: 900 },
+              { name: "捞出",   run: "scoop",           ms: 500 }
+            ]
+          },
+          {
+            id: "serve",
+            name: "上桌",
+            needs: ["boil"],
+            steps: [
+              { name: "装盘", run: "plate --vinegar",       ms: 500 },
+              { name: "上桌", run: "notify --channel dinner", ms: 500 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "hotpot",
+      label: "火锅",
+      describe: "备料 → 熬汤底/备菜 → 开涮 → 开吃",
+      workflow: {
+        name: "火锅",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep",
+            name: "备料",
+            needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4",                    ms: 500 },
+              { name: "准备电磁炉", run: "actions/setup-kitchen@v2 --induction",     ms: 500 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore hotpot",        ms: 600 },
+              { name: "洗蔬菜",     run: "wash --veg --mushroom",                   ms: 800 },
+              { name: "切肥牛",     run: "slice --beef --thin",                     ms: 900 }
+            ]
+          },
+          {
+            id: "broth",
+            name: "熬汤底",
+            needs: ["prep"],
+            steps: [
+              { name: "调汤底", run: "prepare --broth --spicy", ms: 800 },
+              { name: "熬汤",   run: "simmer --20min",          ms: 1200 },
+              { name: "尝汤",   run: "taste --broth",           ms: 600 }
+            ]
+          },
+          {
+            id: "sides",
+            name: "备菜",
+            needs: ["prep"],
+            steps: [
+              { name: "摆盘",   run: "arrange --plates",       ms: 800 },
+              { name: "调蘸料", run: "mix --dip --sesame",     ms: 700 },
+              { name: "冰饮料", run: "chill --drinks",         ms: 600 }
+            ]
+          },
+          {
+            id: "boil",
+            name: "开涮",
+            needs: ["broth", "sides"],
+            steps: [
+              { name: "汤底沸腾", run: "boil --broth",                  ms: 900 },
+              { name: "下菜",     run: "add --meat --veg --mushroom",   ms: 800 },
+              { name: "涮煮",     run: "cook --seconds 15",             ms: 900 },
+              { name: "检查熟度", run: "check --doneness",              ms: 600 }
+            ]
+          },
+          {
+            id: "serve",
+            name: "开吃",
+            needs: ["boil"],
+            steps: [
+              { name: "蘸料", run: "dip --sauce",             ms: 500 },
+              { name: "开吃", run: "notify --channel dinner", ms: 500 }
+            ]
+          }
+        ]
+      }
+    }
+  ];
+
+  /* ========================================================================
      3. 常量与 DOM
      ======================================================================== */
   const STORAGE_WORKFLOW = 'noodle-ci-workflow-v1';
@@ -805,6 +1081,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   const modalEl       = document.getElementById('modal');
   const editorEl      = document.getElementById('editor');
   const editStatusEl  = document.getElementById('editStatus');
+  const presetListEl  = document.getElementById('presetList');
   const closeEditBtn  = document.getElementById('closeEdit');
   const cancelEditBtn = document.getElementById('cancelEdit');
   const applyEditBtn  = document.getElementById('applyEdit');
@@ -1270,9 +1547,8 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       : (running ? '停止当前运行' : '运行 workflow（Ctrl / ⌘ + Enter）');
     runBtn.disabled = graphError;
     editBtn.disabled = running;
-    editBtn.title = running ? '运行中不可编辑' : '编辑 workflow 配置';
+    editBtn.title = running ? '运行中不可编辑' : '编辑 workflow / 载入其他菜品示例';
     resetBtn.disabled = false;
-    failureRateEl.disabled = running;
     graphEl.classList.toggle('is-running', running);
     graphEl.setAttribute('aria-busy', String(running));
   }
@@ -1408,8 +1684,6 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     jobDone = 0;
     jobTotal = workflow.jobs.length;
     stepTotal = countSteps(workflow.jobs);
-    const failureRate = clamp(typeof workflow.failureRate === 'number' ? workflow.failureRate : 0, 0, 1);
-    const failurePercent = Math.round(failureRate * 100);
     runStart = performance.now();
 
     consoleClear();
@@ -1438,13 +1712,12 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     }
 
     log('info', '▶ Run workflow · ' + workflow.name);
-    log('muted', '  ' + jobTotal + ' 个 job / ' + stepTotal + ' 个步骤 · 触发方式 ' + (workflow.on || 'workflow_dispatch') +
-      ' · 随机故障率 ' + failurePercent + '%');
+    log('muted', '  ' + jobTotal + ' 个 job / ' + stepTotal + ' 个步骤 · 触发方式 ' + (workflow.on || 'workflow_dispatch'));
 
     const promises = new Map();
 
     function startJob(job) {
-      const finished = runJob(job, promises, token, failureRate, failurePercent).catch(function (err) {
+      const finished = runJob(job, promises, token).catch(function (err) {
         if (err && err.message === 'cancelled') return 'cancelled';
         console.error(err);
         if (token === runToken) {
@@ -1495,7 +1768,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     syncButtons();
   }
 
-  async function runJob(job, promises, token, failureRate, failurePercent) {
+  async function runJob(job, promises, token) {
     const needs = job.needs || [];
     const depStates = needs.length
       ? await Promise.all(needs.map(function (id) {
@@ -1517,11 +1790,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       return 'skipped';
     }
 
-    // 每个真正启动的 job 掷一次骰子；命中时随机挑一个 step 失败，用于演示失败传播
-    const hasExplicitFailure = job.steps.some(function (step) { return step.willFail === true; });
-    const injectedIndex = (failureRate > 0 && !hasExplicitFailure && Math.random() < failureRate)
-      ? Math.floor(Math.random() * job.steps.length)
-      : -1;
+    // 每个 job 的 step 独立执行，显式 willFail 的 step 会触发失败并让下游 job 跳过
     const jobStartedAt = performance.now();
     setJobState(job.id, 'running');
     log('job', '▶ Job "' + job.name + '"');
@@ -1543,11 +1812,8 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       if (token !== runToken) return 'cancelled';
 
       const stepDuration = performance.now() - stepStartedAt;
-      const isInjectedFailure = injectedIndex === index;
-      if (step.willFail || isInjectedFailure) {
-        const failureReason = step.willFail
-          ? (step.failReason || '退出码 1')
-          : '随机故障注入（模拟 flaky step）';
+      if (step.willFail) {
+        const failureReason = step.failReason || '退出码 1';
         setStepState(job.id, index, 'failed', stepDuration);
         setJobState(job.id, 'failed');
         const failedEl = jobEls.get(job.id);
@@ -1557,11 +1823,12 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
         jobDone += 1;
         updateRunMeta();
         setProgress(jobDone, jobTotal);
-        if (isInjectedFailure && !step.willFail) {
-          log('warn', '🎲 随机故障命中：' + step.name + '（每个 job ' + failurePercent + '% 概率）');
-        }
         log('error', '✗ ' + step.name + ' 失败：' + failureReason);
-        showNotice('error', 'Job "' + job.name + '" 失败：' + failureReason + '。依赖它的下游 job 将被跳过。');
+        const hasDownstream = workflow.jobs.some(function (other) {
+          return (other.needs || []).indexOf(job.id) !== -1;
+        });
+        showNotice('error', 'Job "' + job.name + '" 失败：' + failureReason +
+          (hasDownstream ? '。依赖它的下游 job 将被跳过。' : '。'));
         toast('✗ ' + job.name + ' 失败：' + failureReason, 'error');
         if (failedEl) {
           try { failedEl.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (err) { /* ignore */ }
@@ -1688,6 +1955,35 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     }
   }
 
+  function renderPresetChips() {
+    presetListEl.replaceChildren();
+    DISH_PRESETS.forEach(function (preset) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'preset-chip';
+      btn.dataset.preset = preset.id;
+      btn.textContent = preset.label;
+      btn.title = preset.describe || ('载入「' + preset.label + '」示例');
+      btn.addEventListener('click', function () { loadPreset(preset.id); });
+      presetListEl.appendChild(btn);
+    });
+  }
+
+  function loadPreset(id) {
+    const matched = DISH_PRESETS.filter(function (preset) { return preset.id === id; });
+    if (!matched.length) return;
+    const preset = matched[0];
+    editorEl.value = JSON.stringify(preset.workflow, null, 2);
+    parseEditor();
+    editorEl.focus();
+    editorEl.setSelectionRange(0, 0);
+    editorEl.scrollTop = 0;
+    Array.prototype.forEach.call(presetListEl.children, function (btn) {
+      btn.classList.toggle('is-active', btn.dataset.preset === id);
+    });
+    toast('已载入「' + preset.label + '」示例，点击「应用」生效');
+  }
+
   function openEditor() {
     modalReturnFocus = document.activeElement;
     editorEl.value = JSON.stringify(workflow, null, 2);
@@ -1695,6 +1991,9 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     editorEl.focus();
     setBackgroundInert(true);
     parseEditor();
+    Array.prototype.forEach.call(presetListEl.children, function (btn) {
+      btn.classList.remove('is-active');
+    });
     window.requestAnimationFrame(function () {
       if (modalEl.hidden) return;
       editorEl.focus();
@@ -1736,9 +2035,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   }
 
   function restoreDefaults() {
-    editorEl.value = JSON.stringify(DEFAULT_WORKFLOW, null, 2);
-    parseEditor();
-    toast('已载入默认配置，点击「应用」生效');
+    loadPreset('noodle');
   }
 
   function trapFocus(event) {
@@ -1902,19 +2199,6 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     try { localStorage.setItem(STORAGE_SPEED, String(speed)); } catch (err) { /* ignore */ }
   }
 
-  function syncFailureRateUI(wf) {
-    const rate = clamp(typeof wf.failureRate === 'number' ? wf.failureRate : 0, 0, 1);
-    const percent = Math.round(rate * 100);
-    failureRateEl.value = String(percent);
-    failureRateValEl.textContent = percent + '%';
-  }
-
-  function onFailureRateInput() {
-    const percent = clamp(parseFloat(failureRateEl.value) || 0, 0, 100);
-    workflow.failureRate = percent / 100;
-    failureRateValEl.textContent = Math.round(percent) + '%';
-  }
-
   /* ========================================================================
      16. 事件绑定 / 启动
      ======================================================================== */
@@ -1923,8 +2207,6 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     resetBtn.addEventListener('click', resetAll);
     editBtn.addEventListener('click', openEditor);
     speedEl.addEventListener('input', onSpeedInput);
-    failureRateEl.addEventListener('input', onFailureRateInput);
-    failureRateEl.addEventListener('change', saveWorkflow);
 
     copyLogsBtn.addEventListener('click', copyLogs);
     clearLogsBtn.addEventListener('click', function () {
@@ -1978,6 +2260,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   speedEl.value = String(speed);
   speedValEl.textContent = formatSpeed(speed);
 
+  renderPresetChips();
   bindEvents();
   render(workflow);
   resetAll();
