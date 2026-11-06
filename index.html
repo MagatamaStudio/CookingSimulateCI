@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#0b0f14">
-<title>🍜 煮面 CI</title>
+<meta name="theme-color" content="#0d1117">
+<title>煮一碗面 · kitchen/noodles · GitHub</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%9C%3C/text%3E%3C/svg%3E">
 <style>
 /* ==========================================================================
@@ -564,127 +564,715 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     scroll-behavior:auto !important;
   }
 }
+/* ==========================================================================
+   GitHub Actions 皮肤
+   ========================================================================== */
+:root{
+  --gh-canvas:#0d1117;
+  --gh-header:#010409;
+  --gh-subtle:#161b22;
+  --gh-border:#30363d;
+  --gh-border-muted:#21262d;
+  --gh-fg:#e6edf3;
+  --gh-muted:#8b949e;
+  --gh-subtle-fg:#6e7681;
+  --gh-accent:#2f81f7;
+  --gh-accent-subtle:rgba(56,139,253,.15);
+  --gh-success:#3fb950;
+  --gh-success-emphasis:#238636;
+  --gh-danger:#f85149;
+  --gh-danger-emphasis:#da3633;
+  --gh-attention:#d29922;
+  --gh-done:#a371f7;
+  --gh-open:#fd8c73;
+  --bg:var(--gh-canvas);
+  --surface:var(--gh-canvas);
+  --surface-2:var(--gh-subtle);
+  --surface-3:#21262d;
+  --border:var(--gh-border);
+  --border-strong:#484f58;
+  --text:var(--gh-fg);
+  --text-strong:#f0f6fc;
+  --muted:var(--gh-muted);
+  --dim:var(--gh-subtle-fg);
+  --blue:var(--gh-accent);
+  --green:var(--gh-success);
+  --yellow:var(--gh-attention);
+  --red:var(--gh-danger);
+  --red-deep:var(--gh-danger-emphasis);
+  --radius:6px;
+  --radius-sm:6px;
+  --radius-lg:12px;
+  --shadow-card:none;
+  --shadow-pop:0 8px 24px rgba(1,4,9,.7);
+}
+body{
+  background:var(--gh-canvas);
+  color:var(--gh-fg);
+  font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;
+  height:100vh; height:100dvh; overflow:hidden;
+  display:flex; flex-direction:column;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--gh-accent);text-decoration:none}
+a:hover{text-decoration:underline}
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-thumb{background:#30363d;border:3px solid transparent;background-clip:content-box;border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:#484f58;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- 全局顶栏 ---------- */
+.gh-header{
+  flex:0 0 auto; background:var(--gh-header); border-bottom:1px solid var(--gh-border);
+  color:var(--gh-fg); z-index:30;
+}
+.gh-header-inner{
+  max-width:1360px; margin:0 auto; height:62px; padding:0 24px;
+  display:flex; align-items:center; gap:16px;
+}
+.gh-logo{display:flex; color:#f0f6fc; flex:0 0 auto}
+.gh-logo:hover{color:#fff;text-decoration:none}
+.gh-nav{display:flex; align-items:center; gap:16px; font-size:14px; font-weight:600}
+.gh-nav a{color:#f0f6fc; white-space:nowrap}
+.gh-nav a:hover{color:#b1bac4; text-decoration:none}
+.gh-search{
+  margin-left:auto; display:flex; align-items:center; gap:8px;
+  width:min(272px,30vw); height:32px; padding:0 10px;
+  border:1px solid var(--gh-border); border-radius:6px; background:var(--gh-canvas);
+  color:var(--gh-muted);
+}
+.gh-search:focus-within{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-accent-subtle)}
+.gh-search input{
+  border:0; background:transparent; outline:none; color:var(--gh-fg);
+  width:100%; font-size:14px; font-family:inherit;
+}
+.gh-search input::placeholder{color:var(--gh-muted)}
+.gh-header-actions{display:flex; align-items:center; gap:12px}
+.gh-signin{color:#f0f6fc; font-size:14px; font-weight:600; white-space:nowrap}
+.gh-signin:hover{color:#b1bac4;text-decoration:none}
+
+/* ---------- 仓库导航 ---------- */
+.repo-header{
+  flex:0 0 auto; background:var(--gh-canvas);
+  border-bottom:1px solid var(--gh-border); z-index:20;
+}
+.repo-header-inner{max-width:1360px; margin:0 auto; padding:12px 24px 0}
+.repo-title{display:flex; align-items:center; gap:5px; font-size:20px; line-height:1.25; color:var(--gh-fg)}
+.repo-title svg{color:var(--gh-muted); margin-right:2px}
+.repo-owner,.repo-name{color:var(--gh-accent); font-weight:400}
+.repo-name{font-weight:600}
+.repo-slash{color:var(--gh-muted)}
+.label-public{
+  margin-left:6px; padding:0 7px; border:1px solid var(--gh-border); border-radius:999px;
+  color:var(--gh-muted); font-size:12px; line-height:20px; font-weight:500;
+}
+.repo-tabs{display:flex; align-items:center; gap:4px; margin-top:12px; overflow-x:auto; scrollbar-width:none}
+.repo-tabs::-webkit-scrollbar{display:none}
+.repo-tab{
+  position:relative; display:inline-flex; align-items:center; gap:6px;
+  padding:8px 10px; color:var(--gh-fg); font-size:14px; white-space:nowrap;
+  border-bottom:2px solid transparent; margin-bottom:-1px;
+}
+.repo-tab:hover{background:rgba(177,186,196,.08); text-decoration:none; border-radius:6px 6px 0 0}
+.repo-tab.is-active{font-weight:600; border-bottom-color:var(--gh-open)}
+.counter{
+  display:inline-block; min-width:20px; padding:0 6px; border-radius:999px;
+  background:rgba(110,118,129,.4); color:var(--gh-fg);
+  font-size:12px; line-height:18px; text-align:center;
+}
+
+/* ---------- 运行页 ---------- */
+.run-page{
+  flex:1 1 auto; min-height:0; width:100%; max-width:1360px;
+  margin:0 auto; padding:16px 24px 16px;
+  display:flex; flex-direction:column;
+}
+.run-breadcrumb{
+  display:flex; align-items:center; gap:6px; flex:0 0 auto;
+  margin-bottom:12px; font-size:14px; color:var(--gh-muted);
+}
+.run-breadcrumb a{color:var(--gh-accent)}
+.run-breadcrumb .sep{color:var(--gh-subtle-fg)}
+.run-breadcrumb span:last-child{color:var(--gh-fg)}
+.run-header{
+  display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; flex:0 0 auto;
+  padding-bottom:16px; border-bottom:1px solid var(--gh-border-muted);
+}
+.run-header-main{flex:1 1 480px; min-width:0}
+.run-title-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.run-title-row h1{
+  font-size:24px; font-weight:600; line-height:1.25; color:var(--gh-fg);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.run-number{font:600 16px var(--mono); color:var(--gh-muted)}
+.run-sub{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  margin-top:8px; font-size:13px; color:var(--gh-muted);
+}
+.run-branch{display:inline-flex; align-items:center; gap:4px; color:var(--gh-muted)}
+.run-commit{font-family:var(--mono); color:var(--gh-accent)}
+.run-actor{display:inline-flex; align-items:center; gap:5px}
+.avatar-sm{
+  width:18px; height:18px; border-radius:50%; background:#21262d;
+  display:inline-grid; place-items:center; font-size:11px;
+}
+.run-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; padding-top:2px}
+
+/* ---------- GitHub 按钮 ---------- */
+button{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  height:32px; padding:0 12px; border-radius:6px;
+  border:1px solid var(--gh-border); background:var(--gh-subtle); color:var(--gh-fg);
+  font-family:inherit; font-size:13px; font-weight:500; line-height:20px;
+  box-shadow:none; cursor:pointer; transition:background .12s, border-color .12s;
+}
+button:hover:not(:disabled){background:#30363d; border-color:#8b949e}
+button:active:not(:disabled){background:#282e33}
+button:disabled{opacity:.5; cursor:not-allowed}
+button.primary{
+  background:var(--gh-success-emphasis); border-color:rgba(240,246,252,.1);
+  color:#fff; font-weight:600;
+  box-shadow:0 1px 0 rgba(1,4,9,.1) inset;
+}
+button.primary:hover:not(:disabled){background:#2ea043; border-color:#2ea043}
+button.primary.is-stop{background:var(--gh-danger-emphasis); border-color:rgba(240,246,252,.1)}
+button.primary.is-stop:hover:not(:disabled){background:var(--gh-danger); border-color:var(--gh-danger)}
+.run-btn{min-width:150px}
+.run-icon{display:inline-flex; width:16px; height:16px; align-items:center; justify-content:center}
+.run-icon svg{display:block}
+
+/* ---------- 速度 ---------- */
+.speed{
+  display:flex; align-items:center; gap:6px; height:32px; padding:0 9px;
+  border:1px solid var(--gh-border); border-radius:6px; background:var(--gh-subtle);
+  font-size:12px; color:var(--gh-muted);
+}
+.speed input[type="range"]{
+  width:64px; height:4px; appearance:none; -webkit-appearance:none;
+  background:#30363d; border-radius:999px; outline-offset:4px;
+}
+.speed input[type="range"]::-webkit-slider-thumb{
+  appearance:none; -webkit-appearance:none; width:12px; height:12px; border-radius:50%;
+  background:var(--gh-accent); border:2px solid var(--gh-subtle); cursor:pointer;
+}
+.speed input[type="range"]::-moz-range-thumb{
+  width:12px; height:12px; border:2px solid var(--gh-subtle); border-radius:50%;
+  background:var(--gh-accent); cursor:pointer;
+}
+.speed output{
+  font-family:var(--mono); font-size:11px; color:var(--gh-fg);
+  min-width:28px; text-align:right; font-variant-numeric:tabular-nums;
+}
+
+/* ---------- 状态徽章 ---------- */
+.status-chip{
+  display:inline-flex; align-items:center; gap:6px; padding:3px 9px;
+  border-radius:999px; border:1px solid var(--gh-border); background:var(--gh-subtle);
+  color:var(--gh-muted); font-size:12px; font-weight:600; white-space:nowrap;
+}
+.status-icon{display:inline-flex; width:16px; height:16px; align-items:center; justify-content:center}
+.status-icon svg{display:block}
+.status-chip[data-state="running"] .status-icon svg{animation:spin .9s linear infinite}
+.status-chip[data-state="running"]{color:var(--gh-attention); border-color:rgba(210,153,34,.5); background:rgba(210,153,34,.1)}
+.status-chip[data-state="success"]{color:var(--gh-success); border-color:rgba(63,185,80,.5); background:rgba(63,185,80,.1)}
+.status-chip[data-state="failed"]{color:var(--gh-danger); border-color:rgba(248,81,73,.5); background:rgba(248,81,73,.1)}
+.status-chip[data-state="stopped"]{color:var(--gh-muted); border-color:var(--gh-border); background:var(--gh-subtle)}
+
+/* ---------- 运行状态条 ---------- */
+.run-statusbar{
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap; flex:0 0 auto;
+  padding:8px 0; border-bottom:1px solid var(--gh-border-muted);
+  font-size:12px; color:var(--gh-muted);
+}
+.run-meta{font:12px var(--mono); color:var(--gh-muted); white-space:nowrap}
+.progress{
+  flex:1 1 240px; height:6px; min-width:120px; border-radius:999px;
+  background:#21262d; overflow:hidden;
+}
+.progress-fill{height:100%; width:0; border-radius:inherit; background:var(--gh-accent); transition:width .3s}
+.progress[data-state="failed"] .progress-fill{background:var(--gh-danger)}
+.progress[data-state="stopped"] .progress-fill{background:var(--gh-muted)}
+.run-timer{font:12px var(--mono); color:var(--gh-muted); min-width:54px; text-align:right; white-space:nowrap}
+
+/* ---------- 结果提示 ---------- */
+.run-notice{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex:0 0 auto;
+  margin-top:12px; padding:8px 12px;
+  border:1px solid rgba(248,81,73,.4); border-radius:6px;
+  background:rgba(248,81,73,.1); color:var(--gh-fg); font-size:13px;
+  animation:notice-in .2s ease both;
+}
+.run-notice[hidden]{display:none}
+.notice-icon{
+  flex:0 0 18px; width:18px; height:18px; display:grid; place-items:center;
+  border-radius:50%; background:rgba(248,81,73,.2); color:var(--gh-danger);
+  font:700 11px var(--mono);
+}
+.notice-text{flex:1 1 240px; min-width:0; color:var(--gh-fg)}
+.notice-actions{display:flex; align-items:center; gap:6px; margin-left:auto}
+.notice-actions button{
+  height:28px; padding:0 9px; font-size:12px; color:var(--gh-fg);
+  background:rgba(240,246,252,.06); border-color:rgba(240,246,252,.15);
+}
+.notice-actions button:hover:not(:disabled){background:rgba(240,246,252,.1); border-color:rgba(240,246,252,.25)}
+.notice-close{padding:0 7px; border-color:transparent; color:var(--gh-muted); background:transparent}
+.run-notice[data-kind="success"]{background:rgba(63,185,80,.1); border-color:rgba(63,185,80,.35)}
+.run-notice[data-kind="success"] .notice-icon{background:rgba(63,185,80,.2); color:var(--gh-success)}
+.run-notice[data-kind="stopped"]{background:rgba(139,148,158,.08); border-color:rgba(139,148,158,.3)}
+.run-notice[data-kind="stopped"] .notice-icon{background:rgba(139,148,158,.15); color:var(--gh-muted)}
+
+/* ---------- 工作区 / 面板 ---------- */
+.workspace{flex:1 1 auto; min-height:0; display:flex; gap:24px; padding-top:16px}
+.panel{
+  border:1px solid var(--gh-border); border-radius:6px; background:var(--gh-canvas);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.jobs-panel{flex:1 1 auto; min-width:0}
+.panel-head{
+  display:flex; align-items:center; gap:10px; flex:0 0 auto;
+  min-height:40px; padding:0 16px; border-bottom:1px solid var(--gh-border);
+  background:var(--gh-subtle);
+}
+.panel-head h2,.console-title{font-size:14px; font-weight:600; color:var(--gh-fg); margin:0}
+.panel-sub{font-size:12px; color:var(--gh-muted); font-family:var(--mono)}
+.jobs-panel .graph{
+  flex:1 1 auto; min-height:0; overflow:auto; padding:20px;
+  background:var(--gh-canvas); background-image:none;
+  scrollbar-width:thin; scrollbar-color:var(--gh-border) transparent;
+}
+.sidebar{
+  flex:0 0 296px; min-height:0; overflow:auto;
+  display:flex; flex-direction:column; gap:16px;
+  scrollbar-width:thin; scrollbar-color:var(--gh-border) transparent;
+}
+.sidebar-card{
+  flex:0 0 auto; border:1px solid var(--gh-border); border-radius:6px;
+  padding:12px 16px; background:var(--gh-canvas);
+}
+.sidebar-card h3{font-size:12px; font-weight:600; color:var(--gh-muted); margin:12px 0 4px}
+.sidebar-card h3:first-child{margin-top:0}
+.workflow-file{font:12px var(--mono); color:var(--gh-accent); word-break:break-all; display:block}
+.sidebar-value{font-size:13px; color:var(--gh-fg)}
+.sidebar-muted{font-size:12px; color:var(--gh-muted); margin:0}
+.workflow-nav{display:flex; flex-direction:column; gap:2px; margin-top:4px}
+.workflow-nav button{
+  display:flex; align-items:center; justify-content:flex-start; gap:6px;
+  width:100%; height:30px; padding:0 8px;
+  border:0; border-radius:6px; background:transparent;
+  color:var(--gh-fg); font-size:13px; font-weight:400; text-align:left;
+}
+.workflow-nav button:hover:not(:disabled){background:#21262d; border-color:transparent}
+.workflow-nav button.is-active{background:var(--gh-accent-subtle); color:var(--gh-accent); font-weight:600}
+.workflow-nav button:disabled{opacity:.45; cursor:not-allowed}
+.workflow-nav .wf-icon{display:inline-flex; flex:0 0 14px; width:14px; height:14px; color:var(--gh-muted)}
+.workflow-nav button.is-active .wf-icon{color:var(--gh-accent)}
+.workflow-nav .wf-name{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+
+/* ---------- 作业图 ---------- */
+.stage{width:176px; gap:12px; animation:none}
+.stage-label{display:none}
+.stage-jobs{gap:12px}
+.connector{
+  flex:0 0 24px; padding-top:24px; color:#484f58; animation:none;
+}
+.graph.is-running .connector svg{animation:none}
+.job{
+  background:var(--gh-canvas); border:1px solid var(--gh-border); border-radius:6px;
+  box-shadow:none; overflow:hidden; transition:border-color .15s;
+}
+.job:hover{transform:none; border-color:#8b949e}
+.job::before{display:none}
+.job[data-state="running"]{border-color:rgba(210,153,34,.7); box-shadow:0 0 0 1px rgba(210,153,34,.18)}
+.job[data-state="success"]{border-color:rgba(63,185,80,.45)}
+.job[data-state="failed"]{border-color:rgba(248,81,73,.7); box-shadow:0 0 0 1px rgba(248,81,73,.18); animation:fail-pulse .7s ease-out 1}
+.job[data-state="skipped"], .job[data-state="stopped"]{opacity:.6}
+.job-head{
+  padding:8px 10px; gap:8px; border-bottom:1px solid var(--gh-border);
+  background:var(--gh-subtle);
+}
+.job-name{font-size:13px; font-weight:600; color:var(--gh-fg)}
+.job-id{font:10.5px var(--mono); color:var(--gh-muted)}
+.job-dur{font:10.5px var(--mono); color:var(--gh-muted)}
+.steps{padding:4px 0}
+.step{padding:3px 10px; gap:8px; font-size:12px; color:var(--gh-muted)}
+.step:hover{background:rgba(177,186,196,.06)}
+.step[data-state="success"] .step-name{color:var(--gh-fg)}
+.step[data-state="running"]{color:var(--gh-attention)}
+.step[data-state="failed"] .step-name{color:var(--gh-danger)}
+.step-dur{font:10.5px var(--mono); color:var(--gh-muted)}
+.job-needs{
+  padding:6px 10px 8px; border-top:1px solid var(--gh-border-muted);
+  font:10.5px var(--mono); color:var(--gh-muted);
+}
+.need-chip{background:#21262d; border:1px solid #30363d; color:var(--gh-muted)}
+.status svg{display:block}
+.job[data-state="running"] .job-head .status svg,
+.step[data-state="running"] .status svg{animation:spin .9s linear infinite}
+
+/* ---------- 日志 ---------- */
+.console-resizer{flex:0 0 8px; touch-action:none}
+.console-resizer::after{background:#484f58}
+.console-panel{
+  flex:0 0 auto; height:300px; min-height:140px;
+  border:1px solid var(--gh-border); border-radius:6px; background:var(--gh-canvas);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.console-head{
+  flex:0 0 auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  min-height:40px; padding:0 16px; border-bottom:1px solid var(--gh-border);
+  background:var(--gh-subtle); font-size:12px; color:var(--gh-muted);
+}
+.console-title{font-size:14px; letter-spacing:0; text-transform:none; font-family:inherit}
+.log-count{font:12px var(--mono); color:var(--gh-muted)}
+.console-filter{display:flex; gap:2px; padding:2px; border-radius:6px; background:#21262d}
+.chip{
+  height:26px; padding:0 9px; border:0; border-radius:4px; background:transparent;
+  color:var(--gh-muted); font-size:12px; font-weight:500;
+}
+.chip:hover:not(:disabled){background:rgba(177,186,196,.1); color:var(--gh-fg)}
+.chip.is-active{background:#30363d; color:var(--gh-fg)}
+.chip.is-active:hover:not(:disabled){background:#30363d; color:var(--gh-fg)}
+.console-actions{margin-left:auto; display:flex; align-items:center; gap:8px}
+.switch{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--gh-muted); cursor:pointer; user-select:none}
+.switch input{width:13px; height:13px; accent-color:var(--gh-accent); cursor:pointer}
+.icon-btn{
+  height:28px; padding:0 9px; font-size:12px; color:var(--gh-fg);
+  background:transparent; border-color:var(--gh-border);
+}
+.icon-btn:hover:not(:disabled){background:#30363d; border-color:#8b949e}
+.console{
+  flex:1 1 auto; min-height:0; overflow-y:auto; padding:10px 16px 16px;
+  background:var(--gh-header); color:var(--gh-fg);
+  font:12px/1.65 ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  scrollbar-width:thin; scrollbar-color:var(--gh-border) transparent;
+  overscroll-behavior:contain;
+}
+.console-empty{color:var(--gh-muted); padding:8px 0; font-size:12px}
+.log-line{
+  display:flex; gap:10px; padding:0; margin:0; border-left:0;
+  white-space:pre-wrap; word-break:break-word;
+}
+.log-time{flex:0 0 58px; text-align:right; color:#6e7681; user-select:none; font-variant-numeric:tabular-nums}
+.log-msg{flex:1 1 auto; min-width:0}
+.log-info .log-msg{color:var(--gh-accent)}
+.log-success .log-msg{color:var(--gh-success)}
+.log-error .log-msg{color:var(--gh-danger)}
+.log-warn .log-msg{color:var(--gh-attention)}
+.log-muted .log-msg{color:var(--gh-muted)}
+.log-job{padding-top:4px; margin-top:4px; border-top:1px solid var(--gh-border-muted)}
+.log-job .log-msg{color:var(--gh-fg); font-weight:600}
+.log-step .log-msg{color:var(--gh-fg)}
+.log-run .log-msg{color:var(--gh-muted)}
+.console[data-filter="error"] .log-line:not(.log-error):not(.log-warn){display:none}
+
+/* ---------- 弹窗 ---------- */
+.modal{background:rgba(1,4,9,.8); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px)}
+.modal-box{
+  background:var(--gh-canvas); border:1px solid var(--gh-border); border-radius:12px;
+  box-shadow:var(--shadow-pop); padding:16px 20px 20px;
+}
+.modal-head h2{font-size:16px; color:var(--gh-fg)}
+.modal-sub{color:var(--gh-muted)}
+.modal-close{
+  height:28px; padding:0 8px; border-color:transparent; background:transparent;
+  color:var(--gh-muted);
+}
+.modal-close:hover:not(:disabled){background:#21262d; color:var(--gh-fg)}
+.hint{color:var(--gh-muted)}
+.hint code{background:#21262d; color:var(--gh-fg)}
+.preset-chip{
+  height:28px; padding:0 10px; font-size:12px; background:var(--gh-subtle);
+  border-color:var(--gh-border); color:var(--gh-fg);
+}
+.preset-chip:hover:not(:disabled){background:#30363d; border-color:#8b949e; color:var(--gh-fg)}
+.preset-chip.is-active{background:var(--gh-accent-subtle); border-color:var(--gh-accent); color:var(--gh-accent)}
+textarea{
+  background:var(--gh-header); color:var(--gh-fg); border-color:var(--gh-border);
+  font:12px/1.6 ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-accent-subtle)}
+.modal-error{color:var(--gh-danger)}
+.modal-error.is-ok{color:var(--gh-success)}
+.modal-hint{color:var(--gh-muted)}
+
+/* ---------- Toast ---------- */
+.toast{
+  background:var(--gh-subtle); border:1px solid var(--gh-border);
+  color:var(--gh-fg); box-shadow:0 8px 24px rgba(1,4,9,.6);
+}
+.toast.toast-error{border-color:rgba(248,81,73,.6); color:#ffb4b0}
+.toast.toast-success{border-color:rgba(63,185,80,.5); color:#8ee99b}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1100px){
+  .workspace{flex-direction:column; overflow:auto}
+  .jobs-panel{min-height:280px}
+  .sidebar{flex-basis:auto; width:100%; overflow:visible}
+  .run-actions{justify-content:flex-start}
+}
+@media (max-width:900px){
+  .gh-nav,.gh-search{display:none}
+  .run-header{gap:12px}
+  .run-actions{width:100%; justify-content:flex-start}
+  .console-resizer{display:none}
+  .console-panel{height:220px}
+}
+@media (max-width:640px){
+  .gh-header-inner{height:54px; padding:0 14px}
+  .repo-header-inner{padding:10px 14px 0}
+  .repo-title{font-size:17px}
+  .run-page{padding:12px 14px 12px}
+  .run-title-row h1{font-size:20px}
+  .run-actions .speed{order:3}
+  .run-btn{flex:1 1 auto}
+  .run-statusbar{gap:8px}
+  .run-timer{margin-left:auto}
+  .progress{flex-basis:100%; order:5}
+  .console-head{padding:0 10px; gap:8px}
+  .console-actions .switch span{display:none}
+  .log-count{display:none}
+  .log-time{flex-basis:48px}
+  .run-notice{padding:8px 10px}
+  .notice-actions{margin-left:0}
+  .modal{padding:10px}
+  .modal-box{max-height:94vh; padding:14px}
+  textarea{height:48vh; min-height:200px}
+  .modal-hint{display:none}
+}
+@media (max-height:800px){
+  .console-panel{height:220px}
+}
+@media (max-height:700px){
+  .console-panel{height:180px}
+}
+@media (max-width:980px){
+  .jobs-panel .graph{flex-direction:row; align-items:flex-start; padding:16px}
+  .stage{width:176px; max-width:none; margin:0}
+  .connector{
+    flex:0 0 24px; width:auto; max-width:none; margin:0;
+    padding:24px 0 0; align-self:stretch;
+  }
+  .connector svg{transform:none}
+  .console-resizer{display:none}
+  .console-panel{height:200px !important}
+}
+@media (max-width:980px) and (max-height:720px){
+  .console-panel{height:170px !important}
+}
+@media (max-width:900px){
+  .run-page{overflow-y:auto}
+  .workspace{flex:0 0 auto; overflow:visible}
+  .jobs-panel{min-height:340px}
+  .console-panel{height:220px !important}
+}
+.sidebar-value[data-state="success"]{color:var(--gh-success)}
+.sidebar-value[data-state="failed"]{color:var(--gh-danger)}
+.sidebar-value[data-state="running"]{color:var(--gh-attention)}
 </style>
 </head>
 <body>
 
-<!-- ===================== 顶栏 ===================== -->
-<header class="topbar">
-  <div class="brand">
-    <div class="brand-mark" aria-hidden="true">🍜</div>
-    <div class="brand-text">
-      <div class="crumb">
-        <span class="repo">kitchen/noodles</span>
-        <span class="crumb-sep">/</span>
-        <span class="badge" id="triggerBadge">workflow_dispatch</span>
-        <span class="badge badge-muted">main</span>
-      </div>
-      <h1 id="wfName">煮一碗面</h1>
+<!-- ===================== GitHub 全局顶栏 ===================== -->
+<header class="gh-header">
+  <div class="gh-header-inner">
+    <a class="gh-logo" href="#" aria-label="GitHub">
+      <svg viewBox="0 0 16 16" width="32" height="32" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+    </a>
+    <nav class="gh-nav" aria-label="Global">
+      <a href="#">Product</a>
+      <a href="#">Solutions</a>
+      <a href="#">Open Source</a>
+      <a href="#">Pricing</a>
+    </nav>
+    <div class="gh-search">
+      <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M10.68 11.74a6 6 0 0 1-7.922-8.982 6 6 0 0 1 8.982 7.922l3.04 3.04a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215ZM11.5 7a4.5 4.5 0 1 0-9 0 4.5 4.5 0 0 0 9 0Z"/></svg>
+      <input type="text" placeholder="Search or jump to..." aria-label="Search or jump to">
     </div>
-  </div>
-
-  <div class="toolbar">
-    <label class="speed" for="speed">
-      <span>速度</span>
-      <input type="range" id="speed" min="0.5" max="4" step="0.5" value="1"
-             aria-label="模拟速度" title="调整模拟速度">
-      <output id="speedVal" for="speed">1×</output>
-    </label>
-    <span class="toolbar-sep" aria-hidden="true"></span>
-    <button id="editBtn" type="button" title="编辑 workflow / 载入其他菜品示例">编辑 / 示例</button>
-    <button id="resetBtn" type="button" title="重置状态与日志">重置</button>
-    <button class="primary run-btn" id="runBtn" type="button">
-      <span class="run-icon" id="runIcon" aria-hidden="true">▶</span>
-      <span id="runLabel">运行 workflow</span>
-    </button>
+    <div class="gh-header-actions">
+      <a class="gh-signin" href="#">Sign in</a>
+    </div>
   </div>
 </header>
 
-<!-- ===================== 状态条 ===================== -->
-<section class="runbar" aria-label="运行状态">
-  <span class="status-chip" id="statusChip" data-state="idle" role="status" aria-live="polite">
-    <span class="chip-dot" aria-hidden="true"></span>
-    <span id="statusText">空闲</span>
-  </span>
-  <span class="run-meta" id="runMeta">0 jobs</span>
-  <div class="progress" id="progress" role="progressbar"
-       aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="运行进度">
-    <div class="progress-fill" id="progressFill"></div>
+<!-- ===================== 仓库导航 ===================== -->
+<header class="repo-header">
+  <div class="repo-header-inner">
+    <div class="repo-title">
+      <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v3.25a.25.25 0 0 1-.4.2l-1.45-1.087a.249.249 0 0 0-.3 0L5.4 15.7a.25.25 0 0 1-.4-.2Z"/></svg>
+      <a href="#" class="repo-owner">kitchen</a>
+      <span class="repo-slash">/</span>
+      <a href="#" class="repo-name">noodles</a>
+      <span class="label-public">Public</span>
+    </div>
+    <nav class="repo-tabs" aria-label="Repository">
+      <a href="#" class="repo-tab">Code</a>
+      <a href="#" class="repo-tab">Issues <span class="counter">2</span></a>
+      <a href="#" class="repo-tab">Pull requests <span class="counter">1</span></a>
+      <a href="#" class="repo-tab is-active" aria-current="page">Actions</a>
+      <a href="#" class="repo-tab">Projects</a>
+      <a href="#" class="repo-tab">Wiki</a>
+      <a href="#" class="repo-tab">Security</a>
+      <a href="#" class="repo-tab">Insights</a>
+      <a href="#" class="repo-tab">Settings</a>
+    </nav>
   </div>
-  <span class="run-timer" id="runTimer" title="本次运行计时">0.0s</span>
-</section>
+</header>
+
+<!-- ===================== 运行页 ===================== -->
+<main class="run-page">
+  <nav class="run-breadcrumb" aria-label="Breadcrumb">
+    <a href="#">Actions</a>
+    <span class="sep">/</span>
+    <a href="#" id="crumbWorkflow">煮一碗面</a>
+    <span class="sep">/</span>
+    <span id="crumbRun">Run #1</span>
+  </nav>
+
+  <header class="run-header">
+    <div class="run-header-main">
+      <div class="run-title-row">
+        <span class="status-chip" id="statusChip" data-state="idle" role="status" aria-live="polite">
+          <span class="status-icon" id="statusIcon" aria-hidden="true"><svg viewBox="0 0 16 16" width="16" height="16"><circle cx="8" cy="8" r="6" fill="none" stroke="#8b949e" stroke-width="1.5"/></svg></span>
+          <span id="statusText">Idle</span>
+        </span>
+        <h1 id="wfName">煮一碗面</h1>
+        <span class="run-number" id="runNumber">#1</span>
+      </div>
+      <div class="run-sub">
+        <span class="run-branch"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M9.5 3.25a2.25 2.25 0 1 1 3 2.122V6A2.5 2.5 0 0 1 10 8.5H6a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.5 0v1.836A2.492 2.492 0 0 1 6 7h4a1 1 0 0 0 1-1v-.628A2.25 2.25 0 0 1 9.5 3.25Zm-6 0a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Zm8.25-.75a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM4.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Z"/></svg> main</span>
+        <span class="run-event" id="runEvent">workflow_dispatch</span>
+        <span class="run-commit" id="runCommit">a1b2c3d</span>
+        <span class="run-actor"><span class="avatar-sm">🍜</span> kitchen-chef</span>
+      </div>
+    </div>
+    <div class="run-actions">
+      <label class="speed" for="speed">
+        <span>Speed</span>
+        <input type="range" id="speed" min="0.5" max="4" step="0.5" value="1" aria-label="Simulation speed" title="Simulation speed">
+        <output id="speedVal" for="speed">1×</output>
+      </label>
+      <button id="editBtn" type="button" title="Edit workflow / load a dish example">Edit workflow</button>
+      <button id="resetBtn" type="button" title="Reset run">Reset</button>
+      <button class="primary run-btn" id="runBtn" type="button">
+        <span class="run-icon" id="runIcon" aria-hidden="true"></span>
+        <span id="runLabel">Re-run all jobs</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="run-statusbar" aria-label="Run status">
+    <span class="run-meta" id="runMeta">0 jobs</span>
+    <div class="progress" id="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Run progress">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <span class="run-timer" id="runTimer" title="Run duration">0.0s</span>
+  </div>
 
 <!-- ===================== 结果提示 ===================== -->
 <div class="run-notice" id="runNotice" hidden role="alert" aria-live="assertive">
   <span class="notice-icon" id="runNoticeIcon" aria-hidden="true">!</span>
   <span class="notice-text" id="runNoticeText"></span>
   <div class="notice-actions">
-    <button id="noticeLogsBtn" type="button">查看日志</button>
-    <button class="notice-close" id="noticeCloseBtn" type="button" aria-label="关闭提示">✕</button>
+    <button id="noticeLogsBtn" type="button">View logs</button>
+    <button class="notice-close" id="noticeCloseBtn" type="button" aria-label="Dismiss">✕</button>
   </div>
 </div>
 
-<!-- ===================== 依赖图 ===================== -->
-<main class="graph" id="graph" aria-label="workflow 依赖图" tabindex="0"></main>
+  <!-- ===================== 工作区 ===================== -->
+  <div class="workspace">
+    <section class="panel jobs-panel" aria-label="Jobs">
+      <div class="panel-head">
+        <h2>Jobs</h2>
+        <span class="panel-sub" id="jobsCount">0 jobs</span>
+      </div>
+      <div class="graph" id="graph" aria-label="workflow 依赖图" tabindex="0"></div>
+    </section>
 
-<!-- ===================== 控制台 ===================== -->
-<div class="console-resizer" id="consoleResizer" role="separator" aria-orientation="horizontal"
-     aria-controls="consolePanel" aria-valuemin="112" aria-valuemax="800" aria-valuenow="214"
-     aria-label="拖动调整控制台高度，方向键微调，双击恢复默认" tabindex="0"></div>
-<section class="console-panel" id="consolePanel" aria-label="运行日志">
-  <div class="console-head">
-    <span class="console-title">Console</span>
-    <span class="log-count" id="logCount">0 行</span>
-    <div class="console-filter" role="group" aria-label="日志筛选">
-      <button class="chip is-active" type="button" data-log-filter="all" aria-pressed="true">全部</button>
-      <button class="chip" type="button" data-log-filter="error" aria-pressed="false">问题</button>
-    </div>
-    <div class="console-actions">
-      <label class="switch" for="autoScroll">
-        <input type="checkbox" id="autoScroll" checked>
-        <span>自动滚动</span>
-      </label>
-      <button class="icon-btn" id="copyLogs" type="button" title="复制全部日志">复制</button>
-      <button class="icon-btn" id="clearLogs" type="button" title="清空日志">清空</button>
-    </div>
+    <aside class="sidebar" aria-label="Run details">
+      <section class="sidebar-card">
+        <h3>Workflows</h3>
+        <nav class="workflow-nav" id="workflowNav" aria-label="Switch workflow"></nav>
+      </section>
+      <section class="sidebar-card">
+        <h3>Workflow file</h3>
+        <a href="#" class="workflow-file" id="workflowFile">.github/workflows/noodles.yml</a>
+        <h3>Triggered via</h3>
+        <div class="sidebar-value" id="triggerBadge">workflow_dispatch</div>
+        <h3>Status</h3>
+        <div class="sidebar-value" id="sidebarStatus">Idle</div>
+        <h3>Total duration</h3>
+        <div class="sidebar-value" id="sidebarDuration">—</div>
+        <h3>Started</h3>
+        <div class="sidebar-value" id="sidebarStarted">—</div>
+      </section>
+      <section class="sidebar-card">
+        <h3>Run</h3>
+        <div class="sidebar-value"><span id="sidebarRun">#1</span> · <span>main</span></div>
+        <h3>Artifacts</h3>
+        <p class="sidebar-muted">No artifacts</p>
+      </section>
+    </aside>
   </div>
-  <div class="console" id="console" data-filter="all" role="log" aria-live="off"
-       aria-label="日志输出" tabindex="0">
-    <div class="console-empty" id="consoleEmpty">暂无日志 · 点击「运行 workflow」开始</div>
-  </div>
-</section>
+
+  <!-- ===================== 日志 ===================== -->
+  <div class="console-resizer" id="consoleResizer" role="separator" aria-orientation="horizontal"
+       aria-controls="consolePanel" aria-valuemin="140" aria-valuemax="800" aria-valuenow="300"
+       aria-label="Drag to resize logs; arrow keys to adjust; double-click to reset" tabindex="0"></div>
+  <section class="console-panel" id="consolePanel" aria-label="Run logs">
+    <div class="console-head">
+      <h2 class="console-title">Logs</h2>
+      <span class="log-count" id="logCount">0 lines</span>
+      <div class="console-filter" role="group" aria-label="Filter logs">
+        <button class="chip is-active" type="button" data-log-filter="all" aria-pressed="true">All</button>
+        <button class="chip" type="button" data-log-filter="error" aria-pressed="false">Problems</button>
+      </div>
+      <div class="console-actions">
+        <label class="switch" for="autoScroll">
+          <input type="checkbox" id="autoScroll" checked>
+          <span>Auto-scroll</span>
+        </label>
+        <button class="icon-btn" id="copyLogs" type="button" title="Copy all logs">Copy</button>
+        <button class="icon-btn" id="clearLogs" type="button" title="Clear logs">Clear</button>
+      </div>
+    </div>
+    <div class="console" id="console" data-filter="all" role="log" aria-live="off"
+         aria-label="Logs" tabindex="0">
+      <div class="console-empty" id="consoleEmpty">No logs yet · click “Re-run all jobs” to start.</div>
+    </div>
+  </section>
+</main>
 
 <!-- ===================== 编辑弹窗 ===================== -->
 <div class="modal" id="modal" hidden>
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
     <div class="modal-head">
       <div>
-        <h2 id="editorTitle">编辑 workflow / 示例</h2>
-        <p class="modal-sub">JSON 格式 · 可载入示例菜品 · 应用后会保存到本地浏览器</p>
+        <h2 id="editorTitle">Edit workflow / Examples</h2>
+        <p class="modal-sub">JSON workflow · load an example dish · saved to localStorage</p>
       </div>
-      <button class="modal-close" id="closeEdit" type="button" aria-label="关闭编辑弹窗">✕</button>
+      <button class="modal-close" id="closeEdit" type="button" aria-label="Close dialog">✕</button>
     </div>
-    <div class="presets" role="group" aria-label="示例菜品">
-      <span class="presets-label">示例菜品</span>
+    <div class="presets" role="group" aria-label="Example workflows">
+      <span class="presets-label">Examples</span>
       <div class="preset-list" id="presetList"></div>
     </div>
     <div class="hint">
-      顶层：<code>name</code> <code>on</code> <code>jobs</code>　·　
+      Top level：<code>name</code> <code>on</code> <code>jobs</code>　·　
       job：<code>id</code> <code>name</code> <code>needs</code> <code>steps</code>　·　
       step：<code>name</code> <code>run</code> <code>ms</code> <code>willFail</code> <code>failReason</code><br>
-      给任意 step 加 <code>willFail: true</code> 和 <code>failReason</code>（例如“面条夹生”）即可演练失败传播。
+      Add <code>willFail: true</code> and <code>failReason</code> (e.g. “面条夹生”) to any step to demo failure propagation.
     </div>
-    <textarea id="editor" spellcheck="false" autocomplete="off" aria-label="workflow JSON 内容"></textarea>
+    <textarea id="editor" spellcheck="false" autocomplete="off" aria-label="Workflow JSON"></textarea>
     <div class="modal-meta">
-      <span class="modal-error" id="editStatus" role="status" aria-live="polite">检查中…</span>
-      <span class="modal-hint">Ctrl / ⌘ + Enter 应用 · Esc 关闭</span>
+      <span class="modal-error" id="editStatus" role="status" aria-live="polite">Checking…</span>
+      <span class="modal-hint">Ctrl / ⌘ + Enter apply · Esc close</span>
     </div>
     <div class="modal-actions">
-      <button id="restoreBtn" type="button">恢复默认</button>
-      <button id="formatBtn" type="button">格式化</button>
+      <button id="restoreBtn" type="button">Restore default</button>
+      <button id="formatBtn" type="button">Format</button>
       <span class="flex-spacer"></span>
-      <button id="cancelEdit" type="button">取消</button>
-      <button class="primary" id="applyEdit" type="button">应用</button>
+      <button id="cancelEdit" type="button">Cancel</button>
+      <button class="primary" id="applyEdit" type="button">Apply</button>
     </div>
   </div>
 </div>
@@ -788,12 +1376,14 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       id: "noodle",
       label: "煮一碗面",
       describe: "完整 CI：checkout → lint/build/test → staging → production",
+      file: ".github/workflows/noodles.yml",
       workflow: DEFAULT_WORKFLOW
     },
     {
       id: "tomato-egg",
       label: "番茄炒蛋",
       describe: "备料 → 热锅 → 翻炒 → 调味 → 装盘",
+      file: ".github/workflows/tomato-egg.yml",
       workflow: {
         name: "番茄炒蛋",
         on: "workflow_dispatch",
@@ -856,6 +1446,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       id: "fried-rice",
       label: "蛋炒饭",
       describe: "备料 → 处理米饭 → 炒饭 → 调味 → 装碗",
+      file: ".github/workflows/fried-rice.yml",
       workflow: {
         name: "蛋炒饭",
         on: "workflow_dispatch",
@@ -916,6 +1507,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       id: "dumplings",
       label: "包饺子",
       describe: "和面 → 调馅 → 包饺子 → 下水饺 → 上桌",
+      file: ".github/workflows/dumplings.yml",
       workflow: {
         name: "包饺子",
         on: "workflow_dispatch",
@@ -979,6 +1571,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       id: "hotpot",
       label: "火锅",
       describe: "备料 → 熬汤底/备菜 → 开涮 → 开吃",
+      file: ".github/workflows/hotpot.yml",
       workflow: {
         name: "火锅",
         on: "workflow_dispatch",
@@ -1045,8 +1638,9 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
      ======================================================================== */
   const STORAGE_WORKFLOW = 'noodle-ci-workflow-v1';
   const STORAGE_SPEED = 'noodle-ci-speed';
-  const RUN_ICON = '▶';
-  const STOP_ICON = '■';
+  const RUN_ICON = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M1.75 8a6.25 6.25 0 0 1 10.5-4.59V2.25a.75.75 0 0 1 1.5 0v3a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1 0-1.5h1.14A4.75 4.75 0 1 0 13.25 8a.75.75 0 0 1 1.5 0A6.25 6.25 0 0 1 1.75 8Z"/></svg>';
+  const STOP_ICON = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect x="3" y="3" width="10" height="10" rx="1" fill="currentColor"/></svg>';
+  const WORKFLOW_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0Zm3.5 8.3-5 3a.5.5 0 0 1-.75-.43V5.13a.5.5 0 0 1 .75-.43l5 3a.5.5 0 0 1 0 .86Z"/></svg>';
 
   const wfNameEl      = document.getElementById('wfName');
   const triggerBadgeEl = document.getElementById('triggerBadge');
@@ -1059,15 +1653,26 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   const runLabelEl    = document.getElementById('runLabel');
 
   const statusChipEl  = document.getElementById('statusChip');
+  const statusIconEl  = document.getElementById('statusIcon');
   const statusTextEl  = document.getElementById('statusText');
   const runMetaEl     = document.getElementById('runMeta');
   const progressEl    = document.getElementById('progress');
   const progressFillEl = document.getElementById('progressFill');
   const runTimerEl    = document.getElementById('runTimer');
+  const runNumberEl   = document.getElementById('runNumber');
+  const crumbWorkflowEl = document.getElementById('crumbWorkflow');
+  const crumbRunEl    = document.getElementById('crumbRun');
+  const runEventEl    = document.getElementById('runEvent');
+  const jobsCountEl   = document.getElementById('jobsCount');
+  const sidebarStatusEl = document.getElementById('sidebarStatus');
+  const sidebarDurationEl = document.getElementById('sidebarDuration');
+  const sidebarStartedEl = document.getElementById('sidebarStarted');
+  const sidebarRunEl  = document.getElementById('sidebarRun');
+  const workflowNavEl = document.getElementById('workflowNav');
+  const workflowFileEl = document.getElementById('workflowFile');
 
   const graphEl       = document.getElementById('graph');
-  const topbarEl      = document.querySelector('.topbar');
-  const runbarEl      = document.querySelector('.runbar');
+  const workspaceEl   = document.querySelector('.workspace');
   const consolePanelEl = document.getElementById('consolePanel');
   const consoleResizerEl = document.getElementById('consoleResizer');
   const consoleEl     = document.getElementById('console');
@@ -1119,6 +1724,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   let dragState     = null;
   let lastRunStartedAt = 0;
   let noticeTimer   = 0;
+  let runNumber     = 1;
 
   /* ========================================================================
      5. 工具函数
@@ -1329,8 +1935,10 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
      ======================================================================== */
   function render(wf) {
     wfNameEl.textContent = wf.name || 'workflow';
+    crumbWorkflowEl.textContent = wf.name || 'workflow';
     triggerBadgeEl.textContent = wf.on || 'workflow_dispatch';
-    document.title = (wf.name || 'workflow') + ' · 煮面 CI';
+    runEventEl.textContent = wf.on || 'workflow_dispatch';
+    document.title = (wf.name || 'workflow') + ' · kitchen/noodles · GitHub';
     jobEls.clear();
     stepEls.clear();
     graphEl.replaceChildren();
@@ -1363,6 +1971,8 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
 
     jobTotal = wf.jobs.length;
     stepTotal = countSteps(wf.jobs);
+    jobsCountEl.textContent = jobTotal + ' jobs';
+    syncWorkflowNav();
     syncButtons();
   }
 
@@ -1496,8 +2106,11 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   function setPhase(next, label) {
     phase = next;
     statusChipEl.dataset.state = next;
+    statusIconEl.innerHTML = ICONS[next] || ICONS.pending;
     progressEl.dataset.state = next;
     statusTextEl.textContent = label;
+    sidebarStatusEl.textContent = label;
+    sidebarStatusEl.dataset.state = next;
     updateDocumentTitle(next);
     updateRunMeta();
   }
@@ -1507,7 +2120,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       : nextPhase === 'success' ? '✓ '
       : nextPhase === 'running' ? '▶ '
       : nextPhase === 'stopped' ? '■ ' : '';
-    document.title = prefix + (workflow.name || 'workflow') + ' · 煮面 CI';
+    document.title = prefix + (workflow.name || 'workflow') + ' · kitchen/noodles · GitHub';
   }
 
   function setProgress(done, total) {
@@ -1522,33 +2135,43 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       return;
     }
     if (phase === 'success') {
-      runMetaEl.textContent = jobTotal + ' jobs · 全部通过';
+      runMetaEl.textContent = jobTotal + ' jobs · all passed';
       return;
     }
     if (phase === 'failed') {
-      const bits = [jobTotal + ' jobs', failedJobs + ' 失败'];
-      if (skippedJobs) bits.push(skippedJobs + ' 跳过');
+      const bits = [jobTotal + ' jobs', failedJobs + ' failed'];
+      if (skippedJobs) bits.push(skippedJobs + ' skipped');
       runMetaEl.textContent = bits.join(' · ');
       return;
     }
     if (phase === 'stopped') {
-      runMetaEl.textContent = jobDone + ' / ' + jobTotal + ' jobs · 已停止';
+      runMetaEl.textContent = jobDone + ' / ' + jobTotal + ' jobs · cancelled';
       return;
     }
     runMetaEl.textContent = jobTotal + ' jobs · ' + stepTotal + ' steps';
   }
 
+  function updateRunNumber() {
+    const label = '#' + runNumber;
+    runNumberEl.textContent = label;
+    crumbRunEl.textContent = 'Run ' + label;
+    sidebarRunEl.textContent = label;
+  }
+
   function syncButtons() {
     runBtn.classList.toggle('is-stop', running);
-    runIconEl.textContent = running ? STOP_ICON : RUN_ICON;
-    runLabelEl.textContent = running ? '停止' : '运行 workflow';
+    runIconEl.innerHTML = running ? STOP_ICON : RUN_ICON;
+    runLabelEl.textContent = running ? 'Cancel run' : 'Re-run all jobs';
     runBtn.title = graphError
-      ? 'workflow 配置有误，请先修复'
-      : (running ? '停止当前运行' : '运行 workflow（Ctrl / ⌘ + Enter）');
+      ? 'Fix the workflow before running'
+      : (running ? 'Cancel this run' : 'Re-run all jobs (Ctrl / ⌘ + Enter)');
     runBtn.disabled = graphError;
     editBtn.disabled = running;
-    editBtn.title = running ? '运行中不可编辑' : '编辑 workflow / 载入其他菜品示例';
+    editBtn.title = running ? 'Editing is disabled while running' : 'Edit workflow / load a dish example';
     resetBtn.disabled = false;
+    Array.prototype.forEach.call(workflowNavEl.children, function (btn) {
+      btn.disabled = running;
+    });
     graphEl.classList.toggle('is-running', running);
     graphEl.setAttribute('aria-busy', String(running));
   }
@@ -1556,9 +2179,12 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   function startTimer() {
     stopTimer();
     runTimerEl.textContent = '0.0s';
+    sidebarDurationEl.textContent = '0.0s';
     const startedAt = performance.now();
     timerId = window.setInterval(function () {
-      runTimerEl.textContent = formatDuration(performance.now() - startedAt);
+      const text = formatDuration(performance.now() - startedAt);
+      runTimerEl.textContent = text;
+      sidebarDurationEl.textContent = text;
     }, 100);
   }
 
@@ -1577,7 +2203,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   }
 
   function updateLogCount() {
-    logCountEl.textContent = logCountValue + ' 行';
+    logCountEl.textContent = logCountValue + ' lines';
   }
 
   function log(kind, message) {
@@ -1647,7 +2273,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
 
   function copyLogs() {
     if (logCountValue === 0) {
-      toast('暂无日志可复制', 'error');
+      toast('No logs to copy', 'error');
       return;
     }
     const lines = Array.prototype.slice.call(consoleEl.querySelectorAll('.log-line'));
@@ -1657,7 +2283,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       return (time ? time.textContent : '') + ' ' + (msg ? msg.textContent : '');
     }).join('\n');
     copyText(text).then(function (ok) {
-      toast(ok ? '日志已复制到剪贴板' : '复制失败，请手动选择日志', ok ? 'success' : 'error');
+      toast(ok ? 'Logs copied to clipboard' : 'Copy failed — select the logs manually', ok ? 'success' : 'error');
     });
   }
 
@@ -1679,6 +2305,11 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     const token = ++runToken;
     running = true;
     lastRunStartedAt = performance.now();
+    runNumber += 1;
+    updateRunNumber();
+    sidebarStartedEl.textContent = new Date().toLocaleString('en-US', {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
     failedJobs = 0;
     skippedJobs = 0;
     jobDone = 0;
@@ -1689,7 +2320,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     consoleClear();
     hideNotice();
     resetGraphStates();
-    setPhase('running', '运行中');
+    setPhase('running', 'In progress');
     setProgress(0, jobTotal);
     updateRunMeta();
     startTimer();
@@ -1704,7 +2335,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     } catch (err) {
       running = false;
       stopTimer();
-      setPhase('failed', '配置错误');
+      setPhase('failed', 'Configuration error');
       log('error', '✗ ' + err.message);
       showNotice('error', 'workflow 配置有误：' + err.message);
       syncButtons();
@@ -1746,11 +2377,12 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     stopTimer();
     const duration = performance.now() - runStart;
     runTimerEl.textContent = formatDuration(duration);
+    sidebarDurationEl.textContent = formatDuration(duration);
     jobDone = jobTotal;
     setProgress(jobTotal, jobTotal);
 
     if (failedJobs > 0) {
-      setPhase('failed', '失败');
+      setPhase('failed', 'Failure');
       log('error', '✗ Workflow 失败 · ' + failedJobs + ' 个 job 失败' +
         (skippedJobs ? ' · ' + skippedJobs + ' 个跳过' : '') +
         ' · 用时 ' + formatDuration(duration));
@@ -1758,7 +2390,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
         (skippedJobs ? ' · ' + skippedJobs + ' 个跳过' : '') +
         ' · 用时 ' + formatDuration(duration));
     } else {
-      setPhase('success', '成功');
+      setPhase('success', 'Success');
       log('success', '✓ Workflow 成功 · 用时 ' + formatDuration(duration) +
         (skippedJobs ? ' · ' + skippedJobs + ' 个 job 跳过' : '') + ' 🍜');
       showNotice('success', 'Workflow 成功 · 用时 ' + formatDuration(duration) +
@@ -1862,8 +2494,9 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     runToken += 1;
     running = false;
     stopTimer();
-    setPhase('stopped', '已停止');
-    log('warn', '⏹ 已手动停止 workflow');
+    sidebarDurationEl.textContent = runTimerEl.textContent;
+    setPhase('stopped', 'Cancelled');
+    log('warn', '⏹ Run cancelled');
     showNotice('stopped', '已停止 · ' + jobDone + ' / ' + jobTotal + ' jobs 完成' +
       (failedJobs ? ' · ' + failedJobs + ' 个失败' : ''));
 
@@ -1896,15 +2529,19 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     runStart = performance.now();
 
     runTimerEl.textContent = '0.0s';
+    sidebarDurationEl.textContent = '—';
+    sidebarStartedEl.textContent = '—';
     consoleClear();
     hideNotice();
     resetGraphStates();
-    setPhase('idle', '空闲');
+    setPhase('idle', 'Idle');
     setProgress(0, jobTotal);
+    jobsCountEl.textContent = jobTotal + ' jobs';
+    updateRunNumber();
     syncButtons();
     log('muted', wasRunning
-      ? '已取消上一次运行。点击「运行 workflow」重新开始。'
-      : '就绪。点击「运行 workflow」开始煮面。');
+      ? 'Run cancelled. Click "Re-run all jobs" to start again.'
+      : 'Ready. Click "Re-run all jobs" to start.');
   }
 
   /* ========================================================================
@@ -1919,14 +2556,14 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   function parseEditor() {
     const raw = editorEl.value.trim();
     if (!raw) {
-      setEditorStatus('err', '内容为空');
+      setEditorStatus('err', 'Content is empty');
       return null;
     }
     let data;
     try {
       data = JSON.parse(raw);
     } catch (err) {
-      setEditorStatus('err', 'JSON 解析失败：' + err.message);
+      setEditorStatus('err', 'JSON parse error: ' + err.message);
       return null;
     }
     try {
@@ -1935,7 +2572,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       setEditorStatus('err', err.message);
       return null;
     }
-    setEditorStatus('ok', '格式正确 · ' + data.jobs.length + ' 个 job / ' + countSteps(data.jobs) + ' 个 step');
+    setEditorStatus('ok', 'Valid · ' + data.jobs.length + ' jobs / ' + countSteps(data.jobs) + ' steps');
     return data;
   }
 
@@ -1953,6 +2590,52 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       if (isInert) child.setAttribute('aria-hidden', 'true');
       else child.removeAttribute('aria-hidden');
     }
+  }
+
+  function activePreset() {
+    const matched = DISH_PRESETS.filter(function (preset) {
+      return preset.workflow.name === workflow.name;
+    });
+    return matched.length ? matched[0] : null;
+  }
+
+  function renderWorkflowNav() {
+    workflowNavEl.replaceChildren();
+    DISH_PRESETS.forEach(function (preset) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.workflow = preset.id;
+      btn.title = preset.describe || preset.label;
+      btn.innerHTML = '<span class="wf-icon">' + WORKFLOW_ICON + '</span>' +
+        '<span class="wf-name">' + esc(preset.label) + '</span>';
+      btn.addEventListener('click', function () { switchWorkflow(preset.id); });
+      workflowNavEl.appendChild(btn);
+    });
+  }
+
+  function syncWorkflowNav() {
+    const active = activePreset();
+    Array.prototype.forEach.call(workflowNavEl.children, function (btn) {
+      const isActive = !!active && btn.dataset.workflow === active.id;
+      btn.classList.toggle('is-active', isActive);
+      if (isActive) btn.setAttribute('aria-current', 'true');
+      else btn.removeAttribute('aria-current');
+      btn.disabled = running;
+    });
+    workflowFileEl.textContent = active ? active.file : '.github/workflows/noodles.yml';
+  }
+
+  function switchWorkflow(id) {
+    if (running) return;
+    const matched = DISH_PRESETS.filter(function (preset) { return preset.id === id; });
+    if (!matched.length) return;
+    const preset = matched[0];
+    workflow = normalizeWorkflow(deepCopy(preset.workflow));
+    runNumber = 1;
+    saveWorkflow();
+    render(workflow);
+    resetAll();
+    toast('Switched to “' + preset.label + '”');
   }
 
   function renderPresetChips() {
@@ -1981,7 +2664,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     Array.prototype.forEach.call(presetListEl.children, function (btn) {
       btn.classList.toggle('is-active', btn.dataset.preset === id);
     });
-    toast('已载入「' + preset.label + '」示例，点击「应用」生效');
+    toast('Loaded “' + preset.label + '” example. Click Apply to use it.');
   }
 
   function openEditor() {
@@ -2024,7 +2707,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     render(workflow);
     resetAll();
     closeEditor();
-    toast(saved ? 'workflow 已应用' : 'workflow 已应用（本地保存失败，刷新后会丢失）', saved ? 'success' : 'error');
+    toast(saved ? 'Workflow applied' : 'Workflow applied (local save failed; changes will be lost on refresh)', saved ? 'success' : 'error');
   }
 
   function formatEditor() {
@@ -2119,13 +2802,13 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
      14. 控制台拖拽
      ======================================================================== */
   function consoleMaxHeight() {
-    const used = (topbarEl ? topbarEl.offsetHeight : 0) + (runbarEl ? runbarEl.offsetHeight : 0);
-    return Math.max(150, window.innerHeight - used - 112);
+    const top = workspaceEl ? workspaceEl.getBoundingClientRect().top : 0;
+    return Math.max(160, window.innerHeight - top - 150);
   }
 
   function setConsoleHeight(height) {
     const max = consoleMaxHeight();
-    const next = clamp(height, 112, max);
+    const next = clamp(height, 140, max);
     consolePanelEl.style.height = next + 'px';
     consoleResizerEl.setAttribute('aria-valuenow', String(Math.round(next)));
     consoleResizerEl.setAttribute('aria-valuemax', String(Math.round(max)));
@@ -2211,7 +2894,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     copyLogsBtn.addEventListener('click', copyLogs);
     clearLogsBtn.addEventListener('click', function () {
       consoleClear();
-      toast('日志已清空');
+      toast('Logs cleared');
     });
     noticeLogsBtn.addEventListener('click', function () {
       consoleEl.scrollTop = consoleEl.scrollHeight;
@@ -2261,6 +2944,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   speedValEl.textContent = formatSpeed(speed);
 
   renderPresetChips();
+  renderWorkflowNav();
   bindEvents();
   render(workflow);
   resetAll();
