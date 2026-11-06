@@ -1432,6 +1432,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     runStart = performance.now();
 
     consoleClear();
+    hideNotice();
     resetGraphStates();
     setPhase('running', '运行中');
     setProgress(0, jobTotal);
@@ -1450,6 +1451,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       stopTimer();
       setPhase('failed', '配置错误');
       log('error', '✗ ' + err.message);
+      showNotice('error', 'workflow 配置有误：' + err.message);
       syncButtons();
       return;
     }
