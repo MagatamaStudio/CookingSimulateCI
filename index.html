@@ -535,6 +535,8 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   .console-actions .switch span{display:none}
   .log-count{display:none}
   .log-time{flex-basis:48px}
+  .run-notice{padding:8px 14px; gap:8px}
+  .notice-actions{margin-left:0}
   .modal{padding:10px}
   .modal-box{max-height:94vh; padding:14px}
   textarea{height:48vh; min-height:200px}
@@ -850,6 +852,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   let modalReturnFocus = null;
   let dragState     = null;
   let lastRunStartedAt = 0;
+  let noticeTimer   = 0;
 
   /* ========================================================================
      5. 工具函数
@@ -1472,7 +1475,10 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
           setJobState(job.id, 'failed');
           updateRunMeta();
           setProgress(jobDone, jobTotal);
-          log('error', '✗ Job "' + job.name + '" 异常：' + (err && err.message ? err.message : String(err)));
+          const detail = err && err.message ? err.message : String(err);
+          log('error', '✗ Job "' + job.name + '" 异常：' + detail);
+          showNotice('error', 'Job "' + job.name + '" 异常：' + detail);
+          toast('✗ ' + job.name + ' 异常', 'error');
         }
         return 'failed';
       });
@@ -1497,9 +1503,14 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       log('error', '✗ Workflow 失败 · ' + failedJobs + ' 个 job 失败' +
         (skippedJobs ? ' · ' + skippedJobs + ' 个跳过' : '') +
         ' · 用时 ' + formatDuration(duration));
+      showNotice('error', 'Workflow 失败 · ' + failedJobs + ' 个 job 失败' +
+        (skippedJobs ? ' · ' + skippedJobs + ' 个跳过' : '') +
+        ' · 用时 ' + formatDuration(duration));
     } else {
       setPhase('success', '成功');
       log('success', '✓ Workflow 成功 · 用时 ' + formatDuration(duration) +
+        (skippedJobs ? ' · ' + skippedJobs + ' 个 job 跳过' : '') + ' 🍜');
+      showNotice('success', 'Workflow 成功 · 用时 ' + formatDuration(duration) +
         (skippedJobs ? ' · ' + skippedJobs + ' 个 job 跳过' : '') + ' 🍜');
     }
     updateRunMeta();
@@ -1572,6 +1583,11 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
           log('warn', '🎲 随机故障命中：' + step.name + '（每个 job ' + failurePercent + '% 概率）');
         }
         log('error', '✗ ' + step.name + ' 失败：' + failureReason);
+        showNotice('error', 'Job "' + job.name + '" 失败：' + failureReason + '。依赖它的下游 job 将被跳过。');
+        toast('✗ ' + job.name + ' 失败：' + failureReason, 'error');
+        if (failedEl) {
+          try { failedEl.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (err) { /* ignore */ }
+        }
         return 'failed';
       }
       setStepState(job.id, index, 'success', stepDuration);
@@ -1603,6 +1619,8 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     stopTimer();
     setPhase('stopped', '已停止');
     log('warn', '⏹ 已手动停止 workflow');
+    showNotice('stopped', '已停止 · ' + jobDone + ' / ' + jobTotal + ' jobs 完成' +
+      (failedJobs ? ' · ' + failedJobs + ' 个失败' : ''));
 
     jobEls.forEach(function (el) {
       if (el.dataset.state === 'running') {
@@ -1634,6 +1652,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
 
     runTimerEl.textContent = '0.0s';
     consoleClear();
+    hideNotice();
     resetGraphStates();
     setPhase('idle', '空闲');
     setProgress(0, jobTotal);
@@ -1803,15 +1822,21 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   }
 
   function showNotice(kind, message) {
+    window.clearTimeout(noticeTimer);
     runNoticeEl.dataset.kind = kind;
     runNoticeEl.setAttribute('role', kind === 'error' ? 'alert' : 'status');
     runNoticeEl.setAttribute('aria-live', kind === 'error' ? 'assertive' : 'polite');
     runNoticeIconEl.textContent = kind === 'success' ? '✓' : kind === 'stopped' ? '■' : '!';
     runNoticeTextEl.textContent = message;
     runNoticeEl.hidden = false;
+    if (kind !== 'error') {
+      noticeTimer = window.setTimeout(hideNotice, 5000);
+    }
   }
 
   function hideNotice() {
+    window.clearTimeout(noticeTimer);
+    noticeTimer = 0;
     runNoticeEl.hidden = true;
   }
 
@@ -1928,6 +1953,11 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       consoleClear();
       toast('日志已清空');
     });
+    noticeLogsBtn.addEventListener('click', function () {
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+      consoleEl.focus();
+    });
+    noticeCloseBtn.addEventListener('click', hideNotice);
     autoScrollEl.addEventListener('change', function () {
       if (autoScrollEl.checked) consoleEl.scrollTop = consoleEl.scrollHeight;
     });
