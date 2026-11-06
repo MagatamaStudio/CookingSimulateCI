@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0b0f14">
+<title>🍜 煮面 CI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%9C%3C/text%3E%3C/svg%3E">
+<style>
+/* ==========================================================================
+   1. 基础
+   ========================================================================== */
+:root{
+  color-scheme: dark;
+  --bg:#0b0f14;
+  --surface:#121821;
+  --surface-2:#18202b;
+  --surface-3:#222b38;
+  --border:#273140;
+  --border-strong:#3a4557;
+  --text:#d8e0ea;
+  --text-strong:#f2f6fb;
+  --muted:#95a1b2;
+  --dim:#7c8798;
+  --blue:#58a6ff;
+  --green:#3fb950;
+  --yellow:#d29922;
+  --red:#f85149;
+  --red-deep:#da3633;
+  --purple:#a371f7;
+  --radius-lg:14px;
+  --radius:10px;
+  --radius-sm:7px;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", "PingFang SC", "Microsoft YaHei", Helvetica, Arial, sans-serif;
+  --shadow-card: 0 1px 2px rgba(0,0,0,.35), 0 14px 34px -24px rgba(0,0,0,.9);
+  --shadow-pop: 0 30px 90px -30px rgba(0,0,0,.95);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; height:100vh; height:100dvh; overflow:hidden;
+  display:flex; flex-direction:column;
+  color:var(--text); font:14px/1.55 var(--sans);
+  background:
+    radial-gradient(1100px 520px at 8% -12%, rgba(88,166,255,.12), transparent 62%),
+    radial-gradient(900px 480px at 102% -6%, rgba(163,113,247,.09), transparent 58%),
+    var(--bg);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,p{margin:0}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--surface-3);border:2px solid transparent;background-clip:content-box;border-radius:999px}
+::-webkit-scrollbar-thumb:hover{background:var(--border-strong);background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ==========================================================================
+   2. 顶栏
+   ========================================================================== */
+.topbar{
+  flex:0 0 auto; display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+  padding:12px 20px; border-bottom:1px solid var(--border);
+  background:rgba(11,15,20,.72); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+  position:relative; z-index:5;
+}
+.brand{display:flex; align-items:center; gap:12px; min-width:0}
+.brand-mark{
+  width:40px; height:40px; flex:0 0 40px; display:grid; place-items:center;
+  font-size:20px; border-radius:12px; border:1px solid var(--border-strong);
+  background:radial-gradient(120% 120% at 30% 0%, #253142, #121821 70%);
+  box-shadow:0 6px 18px -10px #000, inset 0 1px 0 rgba(255,255,255,.06);
+}
+.brand-text{display:flex; flex-direction:column; gap:2px; min-width:0}
+.crumb{display:flex; align-items:center; gap:7px; flex-wrap:wrap; font:11.5px var(--mono); color:var(--dim); min-width:0}
+.crumb .repo{color:var(--muted); white-space:nowrap}
+.crumb-sep{opacity:.6}
+h1{
+  font-size:16px; font-weight:600; line-height:1.25; color:var(--text-strong);
+  letter-spacing:.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.badge{
+  font:10.5px var(--mono); padding:2px 7px; border-radius:999px; white-space:nowrap;
+  background:rgba(88,166,255,.1); color:var(--blue); border:1px solid rgba(88,166,255,.28);
+}
+.badge-muted{background:rgba(149,161,178,.08); color:var(--muted); border-color:rgba(149,161,178,.22)}
+.toolbar{display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:wrap}
+.toolbar-sep{width:1px; height:20px; background:var(--border); margin:0 2px}
+
+.speed{
+  display:flex; align-items:center; gap:8px; padding:4px 11px 4px 12px; border-radius:999px;
+  border:1px solid var(--border); background:rgba(24,32,43,.7); font-size:12px; color:var(--muted);
+}
+.speed input[type="range"]{
+  width:84px; height:4px; appearance:none; -webkit-appearance:none;
+  background:var(--surface-3); border-radius:999px; outline-offset:4px;
+}
+.speed input[type="range"]::-webkit-slider-thumb{
+  appearance:none; -webkit-appearance:none; width:12px; height:12px; border-radius:50%;
+  background:var(--green); border:2px solid #0b0f14; box-shadow:0 0 0 2px rgba(63,185,80,.25);
+  cursor:pointer; transition:box-shadow .15s;
+}
+.speed input[type="range"]::-webkit-slider-thumb:hover{box-shadow:0 0 0 4px rgba(63,185,80,.22)}
+.speed input[type="range"]::-moz-range-thumb{
+  width:12px; height:12px; border:2px solid #0b0f14; border-radius:50%;
+  background:var(--green); cursor:pointer;
+}
+.speed output{
+  font-family:var(--mono); font-size:11.5px; color:var(--text);
+  min-width:30px; text-align:right; font-variant-numeric:tabular-nums;
+}
+
+button{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  padding:6px 12px; border-radius:var(--radius-sm);
+  border:1px solid var(--border); background:var(--surface-2); color:var(--text);
+  font-size:13px; font-weight:500;
+  transition:background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
+}
+button:hover:not(:disabled){background:var(--surface-3); border-color:var(--border-strong)}
+button:active:not(:disabled){transform:translateY(1px)}
+button:disabled{opacity:.45; cursor:not-allowed}
+button.primary{
+  color:#fff; font-weight:600; border-color:#2ea043;
+  background:linear-gradient(180deg,#2ea043,#1f883d);
+  box-shadow:0 1px 0 rgba(255,255,255,.08) inset, 0 8px 20px -12px rgba(46,160,67,.9);
+}
+button.primary:hover:not(:disabled){background:linear-gradient(180deg,#3fb950,#238636); border-color:#3fb950}
+button.primary.is-stop{
+  border-color:var(--red-deep);
+  background:linear-gradient(180deg,#da3633,#b62324);
+  box-shadow:0 1px 0 rgba(255,255,255,.08) inset, 0 8px 20px -12px rgba(218,54,51,.9);
+}
+button.primary.is-stop:hover:not(:disabled){background:linear-gradient(180deg,#f85149,#da3633); border-color:var(--red)}
+.run-btn{min-width:148px}
+.run-icon{font-size:11px; line-height:1}
+
+/* ==========================================================================
+   3. 运行状态条
+   ========================================================================== */
+.runbar{
+  flex:0 0 auto; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  padding:9px 20px; border-bottom:1px solid var(--border);
+  background:rgba(8,11,15,.55); font-size:12px; color:var(--muted);
+  position:relative; z-index:4;
+}
+.status-chip{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:3px 10px 3px 9px; border-radius:999px;
+  border:1px solid var(--border); background:var(--surface-2);
+  font-size:11.5px; font-weight:600; color:var(--muted);
+  transition:color .2s, background .2s, border-color .2s;
+}
+.chip-dot{width:7px; height:7px; border-radius:50%; background:var(--dim); transition:background .2s}
+.status-chip[data-state="running"]{color:#e3b341; background:rgba(210,153,34,.1); border-color:rgba(210,153,34,.4)}
+.status-chip[data-state="running"] .chip-dot{background:var(--yellow); animation:chip-pulse 1.5s ease-out infinite}
+.status-chip[data-state="success"]{color:var(--green); background:rgba(63,185,80,.1); border-color:rgba(63,185,80,.35)}
+.status-chip[data-state="success"] .chip-dot{background:var(--green)}
+.status-chip[data-state="failed"]{color:var(--red); background:rgba(248,81,73,.1); border-color:rgba(248,81,73,.4)}
+.status-chip[data-state="failed"] .chip-dot{background:var(--red)}
+.status-chip[data-state="stopped"]{color:var(--muted); background:rgba(149,161,178,.1); border-color:rgba(149,161,178,.3)}
+.status-chip[data-state="stopped"] .chip-dot{background:var(--muted)}
+.run-meta{font:11.5px var(--mono); color:var(--dim); white-space:nowrap; font-variant-numeric:tabular-nums}
+.progress{
+  flex:1 1 220px; height:6px; min-width:120px; border-radius:999px;
+  background:var(--surface-3); overflow:hidden;
+}
+.progress-fill{
+  height:100%; width:0; border-radius:inherit;
+  background:linear-gradient(90deg,var(--blue),var(--green));
+  transition:width .4s cubic-bezier(.4,0,.2,1);
+}
+.progress[data-state="failed"] .progress-fill{background:linear-gradient(90deg,#da3633,#f85149)}
+.progress[data-state="stopped"] .progress-fill{background:linear-gradient(90deg,#6e7681,#95a1b2)}
+.run-timer{
+  font:12px var(--mono); color:var(--muted); min-width:52px; text-align:right;
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+
+/* ==========================================================================
+   4. 依赖图 / pipeline
+   ========================================================================== */
+.graph{
+  flex:1 1 auto; min-height:0; display:flex; align-items:flex-start;
+  padding:26px 24px 30px; overflow:auto;
+  scrollbar-width:thin; scrollbar-color:var(--border) transparent;
+  background-image:
+    linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px);
+  background-size:44px 44px;
+  background-position:-1px -1px;
+}
+.stage{
+  display:flex; flex-direction:column; gap:12px; flex:0 0 auto; width:240px;
+  animation:stage-in .35s cubic-bezier(.2,.7,.3,1) both;
+}
+.stage-label{
+  display:flex; align-items:center; gap:8px; height:18px; padding:0 2px;
+  font:10.5px var(--mono); color:var(--dim); letter-spacing:.12em; text-transform:uppercase;
+}
+.stage-index{color:var(--muted); white-space:nowrap}
+.stage-rule{flex:1 1 auto; height:1px; background:linear-gradient(90deg, var(--border), transparent)}
+.stage-count{color:var(--dim); white-space:nowrap}
+.stage-jobs{display:flex; flex-direction:column; gap:14px}
+.connector{
+  flex:0 0 42px; align-self:stretch; display:flex; justify-content:center;
+  padding-top:40px; color:#3d4654;
+  animation:stage-in .35s ease both;
+}
+.connector svg{flex:0 0 auto}
+.graph.is-running .connector svg{animation:flow 1.4s ease-in-out infinite}
+
+.job{
+  position:relative; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); box-shadow:var(--shadow-card); overflow:hidden;
+  transition:border-color .25s, box-shadow .25s, transform .2s, opacity .25s;
+}
+.job::before{
+  content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:transparent; transition:background .25s; z-index:1;
+}
+.job[data-state="running"]{
+  border-color:rgba(210,153,34,.55);
+  box-shadow:0 0 0 1px rgba(210,153,34,.22), 0 18px 36px -26px rgba(210,153,34,.6);
+}
+.job[data-state="running"]::before{background:var(--yellow)}
+.job[data-state="success"]{border-color:rgba(63,185,80,.35)}
+.job[data-state="success"]::before{background:var(--green)}
+.job[data-state="failed"]{
+  border-color:rgba(248,81,73,.5);
+  box-shadow:0 0 0 1px rgba(248,81,73,.18), 0 18px 36px -26px rgba(248,81,73,.6);
+}
+.job[data-state="failed"]::before{background:var(--red)}
+.job[data-state="skipped"]{opacity:.55}
+.job[data-state="skipped"]::before{background:var(--dim)}
+.job[data-state="stopped"]{opacity:.78; border-color:rgba(149,161,178,.35)}
+.job[data-state="stopped"]::before{background:var(--muted)}
+
+.job-head{
+  display:flex; align-items:center; gap:9px; padding:9px 12px 9px 14px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,0));
+}
+.job-name{
+  font-size:13px; font-weight:600; color:var(--text-strong); min-width:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.job-id{
+  margin-left:auto; font:10.5px var(--mono); color:var(--dim);
+  letter-spacing:.02em; white-space:nowrap;
+  max-width:45%; overflow:hidden; text-overflow:ellipsis;
+}
+.job-dur{
+  font:10.5px var(--mono); color:var(--muted); white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+.job-dur:empty{display:none}
+.steps{list-style:none; margin:0; padding:6px 0}
+.step{
+  display:flex; align-items:center; gap:9px; padding:5px 12px 5px 14px;
+  font-size:12.5px; color:var(--muted); transition:color .2s, background .2s;
+}
+.step-name{
+  flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.step-dur{
+  font:10.5px var(--mono); color:var(--dim); font-variant-numeric:tabular-nums;
+  opacity:0; transition:opacity .2s;
+}
+.step[data-state="success"] .step-dur,
+.step[data-state="failed"] .step-dur{opacity:1}
+.step[data-state="running"]{color:#e3b341}
+.step[data-state="success"] .step-name{color:var(--text)}
+.step[data-state="failed"]{color:var(--red)}
+.step[data-state="failed"] .step-name{color:var(--red); font-weight:500}
+.step[data-state="skipped"]{opacity:.45}
+.step[data-state="stopped"]{opacity:.62}
+.status{flex:0 0 16px; width:16px; height:16px; display:grid; place-items:center}
+.status svg{display:block}
+.job[data-state="running"] .job-head .status svg,
+.step[data-state="running"] .status svg{animation:spin .9s linear infinite}
+.job-needs{
+  display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+  padding:7px 12px 9px 14px; border-top:1px dashed rgba(255,255,255,.05);
+  font:10.5px var(--mono); color:var(--dim);
+}
+.needs-label{letter-spacing:.08em; text-transform:uppercase}
+.need-chip{
+  padding:1px 6px; border-radius:5px; color:var(--muted);
+  background:rgba(149,161,178,.08); border:1px solid rgba(149,161,178,.14);
+}
+.graph-error{
+  display:flex; align-items:flex-start; gap:12px; margin:auto; padding:18px 20px;
+  max-width:560px; border:1px solid rgba(248,81,73,.35); border-radius:var(--radius);
+  background:rgba(248,81,73,.06); color:var(--text);
+}
+.graph-error svg{flex:0 0 24px; color:var(--red)}
+.graph-error b{display:block; color:var(--red); margin-bottom:4px; font-size:13.5px}
+.graph-error p{margin:0; font-size:12.5px; color:var(--muted); font-family:var(--mono); word-break:break-word}
+
+/* ==========================================================================
+   5. 控制台
+   ========================================================================== */
+.console-resizer{
+  flex:0 0 8px; position:relative; cursor:row-resize; touch-action:none;
+}
+.console-resizer::after{
+  content:""; position:absolute; left:50%; top:50%; width:38px; height:3px;
+  border-radius:999px; background:var(--border-strong); transform:translate(-50%,-50%);
+  opacity:0; transition:opacity .15s, background .15s;
+}
+.console-resizer:hover::after,
+.console-resizer:focus-visible::after,
+.console-resizer.is-active::after{opacity:1; background:var(--blue)}
+body.is-resizing{cursor:row-resize; user-select:none}
+body.is-resizing *{cursor:row-resize !important}
+
+.console-panel{
+  flex:0 0 auto; height:214px; min-height:112px;
+  display:flex; flex-direction:column;
+  border-top:1px solid var(--border);
+  background:rgba(7,10,14,.94); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+}
+.console-head{
+  flex:0 0 auto; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:5px 14px 5px 16px; border-bottom:1px solid rgba(255,255,255,.04);
+  font-size:11px; color:var(--dim);
+}
+.console-title{
+  font:600 10.5px var(--mono); letter-spacing:.16em; text-transform:uppercase; color:var(--muted);
+}
+.log-count{font:10.5px var(--mono); color:var(--dim); font-variant-numeric:tabular-nums}
+.console-filter{display:flex; gap:2px; padding:2px; border-radius:7px; background:rgba(255,255,255,.04)}
+.chip{
+  padding:2px 8px; border:0; border-radius:5px; background:transparent;
+  color:var(--dim); font-size:11px; font-weight:500;
+}
+.chip:hover:not(:disabled){background:rgba(255,255,255,.06); color:var(--text); border-color:transparent}
+.chip.is-active{background:var(--surface-3); color:var(--text); box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+.chip.is-active:hover:not(:disabled){background:var(--surface-3); color:var(--text)}
+.console-actions{margin-left:auto; display:flex; align-items:center; gap:10px}
+.switch{display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--dim); cursor:pointer; user-select:none}
+.switch input{width:12px; height:12px; accent-color:var(--green); cursor:pointer}
+.icon-btn{
+  padding:3px 8px; font-size:11px; color:var(--dim);
+  background:transparent; border-color:transparent;
+}
+.icon-btn:hover:not(:disabled){background:rgba(255,255,255,.06); color:var(--text); border-color:transparent}
+.console{
+  flex:1 1 auto; min-height:0; overflow-y:auto; padding:7px 16px 14px;
+  font:12px/1.7 var(--mono); color:var(--text);
+  scrollbar-width:thin; scrollbar-color:var(--border) transparent;
+  overscroll-behavior:contain;
+}
+.console-empty{color:var(--dim); padding:6px 0; font-size:12px}
+.log-line{
+  display:flex; gap:10px; white-space:pre-wrap; word-break:break-word;
+  padding:1px 0 1px 8px; margin-left:-8px;
+  border-left:2px solid transparent;
+}
+.log-line.log-warn{border-left-color:rgba(210,153,34,.5)}
+.log-line.log-error{border-left-color:rgba(248,81,73,.6)}
+.log-time{
+  flex:0 0 58px; text-align:right; color:#596476; user-select:none;
+  font-variant-numeric:tabular-nums;
+}
+.log-msg{flex:1 1 auto; min-width:0}
+.log-info .log-msg{color:var(--blue)}
+.log-success .log-msg{color:var(--green)}
+.log-error .log-msg{color:var(--red)}
+.log-warn .log-msg{color:var(--yellow)}
+.log-muted .log-msg{color:var(--dim)}
+.log-job .log-msg{color:var(--text-strong); font-weight:600}
+.log-step .log-msg{color:var(--text)}
+.log-run .log-msg{color:var(--dim)}
+.console[data-filter="error"] .log-line:not(.log-error):not(.log-warn){display:none}
+
+/* ==========================================================================
+   6. 编辑弹窗
+   ========================================================================== */
+.modal{
+  position:fixed; inset:0; z-index:60; display:grid; place-items:center;
+  padding:22px; background:rgba(3,6,10,.72); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  animation:fade-in .16s ease;
+}
+.modal[hidden]{display:none}
+.modal-box{
+  width:min(840px,100%); max-height:90vh; display:flex; flex-direction:column; gap:12px;
+  padding:18px 20px 20px; border-radius:var(--radius-lg); overflow:auto;
+  background:linear-gradient(180deg,#151c26,#101620);
+  border:1px solid var(--border-strong); box-shadow:var(--shadow-pop);
+  animation:pop-in .18s cubic-bezier(.2,.8,.3,1.1);
+}
+.modal-head{display:flex; align-items:flex-start; gap:12px}
+.modal-head h2{font-size:15px; color:var(--text-strong); letter-spacing:.01em}
+.modal-sub{margin-top:3px; font-size:11.5px; color:var(--dim)}
+.modal-close{
+  margin-left:auto; padding:4px 8px; font-size:13px; color:var(--muted);
+  background:transparent; border-color:transparent;
+}
+.hint{font-size:11.5px; color:var(--dim); line-height:1.7}
+.hint code{
+  font:11px var(--mono); padding:1px 5px; border-radius:4px;
+  background:rgba(255,255,255,.05); color:var(--muted);
+}
+textarea{
+  width:100%; height:52vh; min-height:240px; resize:vertical; padding:12px 14px;
+  border-radius:var(--radius); border:1px solid var(--border);
+  background:#0a0e14; color:var(--text);
+  font:12px/1.65 var(--mono); tab-size:2;
+  transition:border-color .15s, box-shadow .15s;
+}
+textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 3px rgba(88,166,255,.12)}
+.modal-meta{display:flex; align-items:center; gap:12px; min-height:18px}
+.modal-error{font-size:11.5px; color:var(--red)}
+.modal-error.is-ok{color:var(--green)}
+.modal-hint{margin-left:auto; font-size:11px; color:var(--dim); font-family:var(--mono)}
+.modal-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.flex-spacer{flex:1 1 auto}
+
+/* ==========================================================================
+   7. Toast
+   ========================================================================== */
+.toast-wrap{
+  position:fixed; right:22px; bottom:22px; z-index:90;
+  display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+  pointer-events:none;
+}
+.toast{
+  padding:8px 13px; border-radius:9px; background:#1b2430;
+  border:1px solid var(--border-strong); color:var(--text); font-size:12.5px;
+  box-shadow:0 18px 40px -22px #000; animation:toast-in .2s ease both;
+}
+.toast.is-out{animation:toast-out .18s ease forwards}
+.toast.toast-error{border-color:rgba(248,81,73,.5); color:#ffb4b0}
+.toast.toast-success{border-color:rgba(63,185,80,.45); color:#8ee99b}
+
+/* ==========================================================================
+   8. 动画
+   ========================================================================== */
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes stage-in{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+@keyframes fade-in{from{opacity:0} to{opacity:1}}
+@keyframes pop-in{from{opacity:0; transform:translateY(8px) scale(.98)} to{opacity:1; transform:none}}
+@keyframes toast-in{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+@keyframes toast-out{to{opacity:0; transform:translateY(6px)}}
+@keyframes chip-pulse{
+  0%{box-shadow:0 0 0 0 rgba(210,153,34,.55)}
+  70%{box-shadow:0 0 0 6px rgba(210,153,34,0)}
+  100%{box-shadow:0 0 0 0 rgba(210,153,34,0)}
+}
+@keyframes flow{0%,100%{opacity:.35} 50%{opacity:1}}
+
+@media (hover:hover){
+  .job:hover{transform:translateY(-2px); border-color:var(--border-strong)}
+  .step:hover{background:rgba(255,255,255,.03)}
+}
+
+/* ==========================================================================
+   9. 响应式
+   ========================================================================== */
+@media (max-width:980px){
+  .graph{
+    flex-direction:column; align-items:stretch; gap:0;
+    padding:18px 16px 24px;
+  }
+  .stage{width:100%; max-width:560px; margin:0 auto}
+  .stage-jobs{gap:12px}
+  .job{width:100%}
+  .connector{
+    width:100%; max-width:560px; margin:0 auto; flex:0 0 40px;
+    padding:4px 0; align-self:auto;
+  }
+  .connector svg{transform:rotate(90deg)}
+  .console-resizer{display:none}
+  .console-panel{height:190px !important}
+}
+@media (max-width:980px) and (max-height:720px){
+  .console-panel{height:158px !important}
+}
+@media (max-width:640px){
+  .topbar{padding:10px 14px; gap:12px}
+  .brand-mark{width:34px; height:34px; flex-basis:34px; font-size:17px; border-radius:10px}
+  .crumb .badge-muted{display:none}
+  h1{font-size:14.5px}
+  .toolbar{width:100%; justify-content:flex-start}
+  .run-btn{flex:1 1 auto}
+  .speed{order:-1}
+  .runbar{padding:8px 14px; gap:10px}
+  .run-meta{display:none}
+  .progress{flex-basis:100%; order:5}
+  .run-timer{margin-left:auto}
+  .console-head{padding:5px 10px; gap:8px}
+  .console-actions .switch span{display:none}
+  .log-count{display:none}
+  .log-time{flex-basis:48px}
+  .modal{padding:10px}
+  .modal-box{max-height:94vh; padding:14px}
+  textarea{height:48vh; min-height:200px}
+  .modal-hint{display:none}
+}
+@media (max-height:720px){
+  .console-panel{height:168px}
+  .graph{padding-top:18px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms !important;
+    animation-delay:0ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+    scroll-behavior:auto !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== 顶栏 ===================== -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">🍜</div>
+    <div class="brand-text">
+      <div class="crumb">
+        <span class="repo">kitchen/noodles</span>
+        <span class="crumb-sep">/</span>
+        <span class="badge" id="triggerBadge">workflow_dispatch</span>
+        <span class="badge badge-muted">main</span>
+      </div>
+      <h1 id="wfName">煮一碗面</h1>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <label class="speed" for="speed">
+      <span>速度</span>
+      <input type="range" id="speed" min="0.5" max="4" step="0.5" value="1"
+             aria-label="模拟速度" title="调整模拟速度">
+      <output id="speedVal" for="speed">1×</output>
+    </label>
+    <span class="toolbar-sep" aria-hidden="true"></span>
+    <button id="editBtn" type="button" title="编辑 workflow 配置">编辑</button>
+    <button id="resetBtn" type="button" title="重置状态与日志">重置</button>
+    <button class="primary run-btn" id="runBtn" type="button">
+      <span class="run-icon" id="runIcon" aria-hidden="true">▶</span>
+      <span id="runLabel">运行 workflow</span>
+    </button>
+  </div>
+</header>
+
+<!-- ===================== 状态条 ===================== -->
+<section class="runbar" aria-label="运行状态">
+  <span class="status-chip" id="statusChip" data-state="idle" role="status" aria-live="polite">
+    <span class="chip-dot" aria-hidden="true"></span>
+    <span id="statusText">空闲</span>
+  </span>
+  <span class="run-meta" id="runMeta">0 jobs</span>
+  <div class="progress" id="progress" role="progressbar"
+       aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="运行进度">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <span class="run-timer" id="runTimer" title="本次运行计时">0.0s</span>
+</section>
+
+<!-- ===================== 依赖图 ===================== -->
+<main class="graph" id="graph" aria-label="workflow 依赖图" tabindex="0"></main>
+
+<!-- ===================== 控制台 ===================== -->
+<div class="console-resizer" id="consoleResizer" role="separator" aria-orientation="horizontal"
+     aria-controls="consolePanel" aria-valuemin="112" aria-valuemax="800" aria-valuenow="214"
+     aria-label="拖动调整控制台高度，方向键微调，双击恢复默认" tabindex="0"></div>
+<section class="console-panel" id="consolePanel" aria-label="运行日志">
+  <div class="console-head">
+    <span class="console-title">Console</span>
+    <span class="log-count" id="logCount">0 行</span>
+    <div class="console-filter" role="group" aria-label="日志筛选">
+      <button class="chip is-active" type="button" data-log-filter="all" aria-pressed="true">全部</button>
+      <button class="chip" type="button" data-log-filter="error" aria-pressed="false">问题</button>
+    </div>
+    <div class="console-actions">
+      <label class="switch" for="autoScroll">
+        <input type="checkbox" id="autoScroll" checked>
+        <span>自动滚动</span>
+      </label>
+      <button class="icon-btn" id="copyLogs" type="button" title="复制全部日志">复制</button>
+      <button class="icon-btn" id="clearLogs" type="button" title="清空日志">清空</button>
+    </div>
+  </div>
+  <div class="console" id="console" data-filter="all" role="log" aria-live="off"
+       aria-label="日志输出" tabindex="0">
+    <div class="console-empty" id="consoleEmpty">暂无日志 · 点击「运行 workflow」开始</div>
+  </div>
+</section>
+
+<!-- ===================== 编辑弹窗 ===================== -->
+<div class="modal" id="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+    <div class="modal-head">
+      <div>
+        <h2 id="editorTitle">编辑 workflow</h2>
+        <p class="modal-sub">JSON 格式 · 应用后会保存到本地浏览器</p>
+      </div>
+      <button class="modal-close" id="closeEdit" type="button" aria-label="关闭编辑弹窗">✕</button>
+    </div>
+    <div class="hint">
+      顶层：<code>name</code> <code>on</code> <code>jobs</code>　·　
+      job：<code>id</code> <code>name</code> <code>needs</code> <code>steps</code>　·　
+      step：<code>name</code> <code>run</code> <code>ms</code> <code>willFail</code> <code>failReason</code>
+    </div>
+    <textarea id="editor" spellcheck="false" autocomplete="off" aria-label="workflow JSON 内容"></textarea>
+    <div class="modal-meta">
+      <span class="modal-error" id="editStatus" role="status" aria-live="polite">检查中…</span>
+      <span class="modal-hint">Ctrl / ⌘ + Enter 应用 · Esc 关闭</span>
+    </div>
+    <div class="modal-actions">
+      <button id="restoreBtn" type="button">恢复默认</button>
+      <button id="formatBtn" type="button">格式化</button>
+      <span class="flex-spacer"></span>
+      <button id="cancelEdit" type="button">取消</button>
+      <button class="primary" id="applyEdit" type="button">应用</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+(function () {
+  /* ========================================================================
+     1. 图标
+     ======================================================================== */
+  const ICONS = {
+    pending: `<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="#4d5867" stroke-width="1.6"/></svg>`,
+    running: `<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="#d29922" stroke-width="1.8" stroke-dasharray="10 28" stroke-linecap="round"/></svg>`,
+    success: `<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#238636"/><path d="M4.7 8.3l2.2 2.2 4.4-4.8" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    failed: `<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#da3633"/><path d="M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+    skipped: `<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="#4d5867" stroke-width="1.6"/><path d="M5.3 8h5.4" stroke="#4d5867" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+    stopped: `<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="#7c8798" stroke-width="1.6"/><rect x="5.4" y="5.4" width="5.2" height="5.2" rx="1" fill="#7c8798"/></svg>`
+  };
+
+  /* ========================================================================
+     2. 默认 workflow：煮一碗面
+     ======================================================================== */
+  const DEFAULT_WORKFLOW = {
+    name: "煮一碗面",
+    on: "workflow_dispatch",
+    jobs: [
+      {
+        id: "prep",
+        name: "备料",
+        needs: [],
+        steps: [
+          { name: "取出挂面", run: "take-pasta --weight 100g",            ms: 700 },
+          { name: "洗净青菜", run: "wash --veg bokchoy --drain",          ms: 900 },
+          { name: "切葱花",   run: "chop --item scallion --style fine",   ms: 800 },
+          { name: "调汤底",   run: "make-sauce --soy 2tbsp --oil sesame", ms: 900 }
+        ]
+      },
+      {
+        id: "boil",
+        name: "烧水",
+        needs: [],
+        steps: [
+          { name: "接水入锅", run: "fill-pot --water 1500ml",      ms: 700 },
+          { name: "大火加热", run: "heat --level high",            ms: 1800 },
+          { name: "确认沸腾", run: "assert boiling --timeout 300s", ms: 700 }
+        ]
+      },
+      {
+        id: "cook",
+        name: "煮面",
+        needs: ["boil"],
+        steps: [
+          { name: "面条下锅", run: "add-pasta --scatter --stir",            ms: 1000 },
+          { name: "点冷水",   run: "add-coldwater --volume 200ml --times 2", ms: 1400 },
+          { name: "检查熟度", run: "check-doneness --no-white-core",         ms: 700 }
+        ]
+      },
+      {
+        id: "season",
+        name: "冲汤",
+        needs: ["prep", "cook"],
+        steps: [
+          { name: "冲入面汤", run: "pour-soup --from pot --volume 2ladles", ms: 800 },
+          { name: "烫青菜",   run: "blanch --veg bokchoy --seconds 20",     ms: 900 }
+        ]
+      },
+      {
+        id: "serve",
+        name: "出锅",
+        needs: ["season"],
+        steps: [
+          { name: "捞面入碗", run: "transfer --pasta bowl --garnish scallion", ms: 900 },
+          { name: "上桌",     run: "serve --hot",                              ms: 600 }
+        ]
+      }
+    ]
+  };
+
+  /* ========================================================================
+     3. 常量与 DOM
+     ======================================================================== */
+  const STORAGE_WORKFLOW = 'noodle-ci-workflow-v1';
+  const STORAGE_SPEED = 'noodle-ci-speed';
+  const RUN_ICON = '▶';
+  const STOP_ICON = '■';
+
+  const wfNameEl      = document.getElementById('wfName');
+  const triggerBadgeEl = document.getElementById('triggerBadge');
+  const speedEl       = document.getElementById('speed');
+  const speedValEl    = document.getElementById('speedVal');
+  const editBtn       = document.getElementById('editBtn');
+  const resetBtn      = document.getElementById('resetBtn');
+  const runBtn        = document.getElementById('runBtn');
+  const runIconEl     = document.getElementById('runIcon');
+  const runLabelEl    = document.getElementById('runLabel');
+
+  const statusChipEl  = document.getElementById('statusChip');
+  const statusTextEl  = document.getElementById('statusText');
+  const runMetaEl     = document.getElementById('runMeta');
+  const progressEl    = document.getElementById('progress');
+  const progressFillEl = document.getElementById('progressFill');
+  const runTimerEl    = document.getElementById('runTimer');
+
+  const graphEl       = document.getElementById('graph');
+  const topbarEl      = document.querySelector('.topbar');
+  const runbarEl      = document.querySelector('.runbar');
+  const consolePanelEl = document.getElementById('consolePanel');
+  const consoleResizerEl = document.getElementById('consoleResizer');
+  const consoleEl     = document.getElementById('console');
+  const consoleEmptyEl = document.getElementById('consoleEmpty');
+  const logCountEl    = document.getElementById('logCount');
+  const copyLogsBtn   = document.getElementById('copyLogs');
+  const clearLogsBtn  = document.getElementById('clearLogs');
+  const autoScrollEl  = document.getElementById('autoScroll');
+  const filterBtns    = Array.prototype.slice.call(document.querySelectorAll('[data-log-filter]'));
+
+  const modalEl       = document.getElementById('modal');
+  const editorEl      = document.getElementById('editor');
+  const editStatusEl  = document.getElementById('editStatus');
+  const closeEditBtn  = document.getElementById('closeEdit');
+  const cancelEditBtn = document.getElementById('cancelEdit');
+  const applyEditBtn  = document.getElementById('applyEdit');
+  const formatBtn     = document.getElementById('formatBtn');
+  const restoreBtn    = document.getElementById('restoreBtn');
+
+  const toastWrapEl   = document.getElementById('toastWrap');
+
+  /* ========================================================================
+     4. 状态
+     ======================================================================== */
+  let workflow      = loadWorkflow();
+  let speed         = loadSpeed();
+  let graphError    = false;
+  let running       = false;
+  let runToken      = 0;
+  let runStart      = performance.now();
+  let timerId       = 0;
+  let jobEls        = new Map();
+  let stepEls       = new Map();
+  let jobTotal      = workflow.jobs.length;
+  let stepTotal     = countSteps(workflow.jobs);
+  let jobDone       = 0;
+  let failedJobs    = 0;
+  let skippedJobs   = 0;
+  let phase         = 'idle';
+  let logCountValue = 0;
+  let validateTimer = 0;
+  let modalReturnFocus = null;
+  let dragState     = null;
+  let lastRunStartedAt = 0;
+
+  /* ========================================================================
+     5. 工具函数
+     ======================================================================== */
+  function esc(value) {
+    return String(value).replace(/[&<>"']/g, function (ch) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+    });
+  }
+
+  function deepCopy(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function countSteps(jobs) {
+    return jobs.reduce(function (sum, job) { return sum + job.steps.length; }, 0);
+  }
+
+  function formatDuration(ms) {
+    const seconds = Math.max(0, ms) / 1000;
+    return seconds < 10 ? seconds.toFixed(1) + 's' : Math.round(seconds) + 's';
+  }
+
+  function formatSpeed(value) {
+    return value + '×';
+  }
+
+  function sleep(ms, token) {
+    return new Promise(function (resolve, reject) {
+      const delay = Math.max(80, Math.round(ms / speed));
+      window.setTimeout(function () {
+        if (token !== runToken) reject(new Error('cancelled'));
+        else resolve();
+      }, delay);
+    });
+  }
+
+  /* ========================================================================
+     6. workflow 校验 / 归一化 / 持久化
+     ======================================================================== */
+  function validateWorkflow(candidate) {
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
+      throw new Error('workflow 必须是一个 JSON 对象');
+    }
+    if (candidate.name != null && typeof candidate.name !== 'string') {
+      throw new Error('name 必须是字符串');
+    }
+    if (candidate.on != null && typeof candidate.on !== 'string') {
+      throw new Error('on 必须是字符串');
+    }
+    if (!Array.isArray(candidate.jobs) || candidate.jobs.length === 0) {
+      throw new Error('缺少非空的 jobs 数组');
+    }
+
+    const seenIds = new Set();
+    candidate.jobs.forEach(function (job, jobIndex) {
+      if (!job || typeof job !== 'object' || Array.isArray(job)) {
+        throw new Error('jobs[' + jobIndex + '] 必须是对象');
+      }
+      if (typeof job.id !== 'string' || !job.id.trim()) {
+        throw new Error('jobs[' + jobIndex + '] 缺少 id');
+      }
+      if (seenIds.has(job.id)) {
+        throw new Error('job id 重复：' + job.id);
+      }
+      seenIds.add(job.id);
+      if (typeof job.name !== 'string' || !job.name.trim()) {
+        throw new Error('job "' + job.id + '" 缺少 name');
+      }
+      if (job.needs != null) {
+        if (!Array.isArray(job.needs)) {
+          throw new Error('job "' + job.id + '" 的 needs 必须是数组');
+        }
+        job.needs.forEach(function (dep) {
+          if (typeof dep !== 'string' || !dep.trim()) {
+            throw new Error('job "' + job.id + '" 的 needs 中每一项都必须是 job id');
+          }
+        });
+      }
+      if (!Array.isArray(job.steps) || job.steps.length === 0) {
+        throw new Error('job "' + job.id + '" 没有 steps');
+      }
+      job.steps.forEach(function (step, stepIndex) {
+        if (!step || typeof step !== 'object' || Array.isArray(step)) {
+          throw new Error('job "' + job.id + '" 的 steps[' + stepIndex + '] 必须是对象');
+        }
+        if (typeof step.name !== 'string' || !step.name.trim()) {
+          throw new Error('job "' + job.id + '" 的 steps[' + stepIndex + '] 缺少 name');
+        }
+        if (step.ms != null && (typeof step.ms !== 'number' || !Number.isFinite(step.ms) || step.ms < 0)) {
+          throw new Error('job "' + job.id + '" 的步骤 "' + step.name + '" 的 ms 必须是非负数字');
+        }
+        if (step.run != null && typeof step.run !== 'string') {
+          throw new Error('job "' + job.id + '" 的步骤 "' + step.name + '" 的 run 必须是字符串');
+        }
+        if (step.willFail != null && typeof step.willFail !== 'boolean') {
+          throw new Error('job "' + job.id + '" 的步骤 "' + step.name + '" 的 willFail 必须是布尔值');
+        }
+        if (step.failReason != null && typeof step.failReason !== 'string') {
+          throw new Error('job "' + job.id + '" 的步骤 "' + step.name + '" 的 failReason 必须是字符串');
+        }
+      });
+    });
+
+    computeStages(normalizeWorkflow(candidate).jobs);
+  }
+
+  function normalizeWorkflow(candidate) {
+    return {
+      name: candidate.name && candidate.name.trim() ? candidate.name.trim() : '未命名 workflow',
+      on: candidate.on && candidate.on.trim() ? candidate.on.trim() : 'workflow_dispatch',
+      jobs: candidate.jobs.map(function (job) {
+        return {
+          id: job.id.trim(),
+          name: job.name.trim(),
+          needs: (job.needs || []).map(function (dep) { return dep.trim(); }),
+          steps: job.steps.map(function (step) {
+            const next = {
+              name: step.name.trim(),
+              ms: typeof step.ms === 'number' ? step.ms : 800
+            };
+            if (step.run) next.run = step.run;
+            if (step.willFail) {
+              next.willFail = true;
+              if (step.failReason) next.failReason = step.failReason;
+            }
+            return next;
+          })
+        };
+      })
+    };
+  }
+
+  function loadWorkflow() {
+    try {
+      const raw = localStorage.getItem(STORAGE_WORKFLOW);
+      if (raw) {
+        const stored = JSON.parse(raw);
+        validateWorkflow(stored);
+        return normalizeWorkflow(stored);
+      }
+    } catch (err) { /* 本地数据损坏时回退到默认配置 */ }
+    return deepCopy(DEFAULT_WORKFLOW);
+  }
+
+  function loadSpeed() {
+    try {
+      const stored = parseFloat(localStorage.getItem(STORAGE_SPEED));
+      if (Number.isFinite(stored)) return clamp(Math.round(stored * 2) / 2, 0.5, 4);
+    } catch (err) { /* ignore */ }
+    return 1;
+  }
+
+  function saveWorkflow() {
+    try {
+      localStorage.setItem(STORAGE_WORKFLOW, JSON.stringify(workflow));
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  /* ========================================================================
+     7. 依赖层级计算
+     ======================================================================== */
+  function computeStages(jobs) {
+    const byId = new Map();
+    jobs.forEach(function (job) {
+      if (byId.has(job.id)) throw new Error('job id 重复：' + job.id);
+      byId.set(job.id, job);
+    });
+
+    const levels = new Map();
+    const visiting = new Set();
+
+    function levelOf(job) {
+      if (levels.has(job.id)) return levels.get(job.id);
+      if (visiting.has(job.id)) throw new Error('依赖成环：' + job.id);
+      visiting.add(job.id);
+      let level = 0;
+      (job.needs || []).forEach(function (depId) {
+        const dep = byId.get(depId);
+        if (!dep) throw new Error('job "' + job.id + '" 依赖了不存在的 job "' + depId + '"');
+        level = Math.max(level, levelOf(dep) + 1);
+      });
+      visiting.delete(job.id);
+      levels.set(job.id, level);
+      return level;
+    }
+
+    jobs.forEach(levelOf);
+
+    const stages = [];
+    jobs.forEach(function (job) {
+      const level = levels.get(job.id);
+      if (!stages[level]) stages[level] = [];
+      stages[level].push(job);
+    });
+    return stages.filter(Boolean);
+  }
+
+  /* ========================================================================
+     8. 渲染
+     ======================================================================== */
+  function render(wf) {
+    wfNameEl.textContent = wf.name || 'workflow';
+    triggerBadgeEl.textContent = wf.on || 'workflow_dispatch';
+    document.title = (wf.name || 'workflow') + ' · 煮面 CI';
+    jobEls.clear();
+    stepEls.clear();
+    graphEl.replaceChildren();
+    graphError = false;
+
+    let stages;
+    try {
+      stages = computeStages(wf.jobs);
+    } catch (err) {
+      graphError = true;
+      const box = document.createElement('div');
+      box.className = 'graph-error';
+      box.innerHTML =
+        '<svg width="24" height="24" viewBox="0 0 16 16" aria-hidden="true">' +
+          '<circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.4"/>' +
+          '<path d="M8 4.6v4.2M8 11.2v.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+        '</svg>' +
+        '<div><b>workflow 配置有误</b><p>' + esc(err.message) + '</p></div>';
+      graphEl.appendChild(box);
+      syncButtons();
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    stages.forEach(function (stage, index) {
+      fragment.appendChild(renderStage(stage, index));
+      if (index < stages.length - 1) fragment.appendChild(renderConnector(index));
+    });
+    graphEl.appendChild(fragment);
+
+    jobTotal = wf.jobs.length;
+    stepTotal = countSteps(wf.jobs);
+    syncButtons();
+  }
+
+  function renderStage(stage, index) {
+    const column = document.createElement('section');
+    column.className = 'stage';
+    column.setAttribute('aria-label', '阶段 ' + (index + 1) + '，' + stage.length + ' 个 job');
+    column.style.animationDelay = Math.min(index * 55, 330) + 'ms';
+
+    const label = document.createElement('div');
+    label.className = 'stage-label';
+    label.innerHTML =
+      '<span class="stage-index">阶段 ' + String(index + 1).padStart(2, '0') + '</span>' +
+      '<span class="stage-rule"></span>' +
+      '<span class="stage-count">×' + stage.length + '</span>';
+
+    const jobs = document.createElement('div');
+    jobs.className = 'stage-jobs';
+    stage.forEach(function (job) { jobs.appendChild(renderJob(job)); });
+
+    column.appendChild(label);
+    column.appendChild(jobs);
+    return column;
+  }
+
+  function renderConnector(index) {
+    const el = document.createElement('div');
+    el.className = 'connector';
+    el.setAttribute('aria-hidden', 'true');
+    el.style.animationDelay = Math.min(index * 55 + 30, 360) + 'ms';
+    el.innerHTML =
+      '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M4 12h15M13 6.5 19 12l-6 5.5" fill="none" stroke="currentColor" ' +
+        'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '</svg>';
+    return el;
+  }
+
+  function renderJob(job) {
+    const el = document.createElement('article');
+    el.className = 'job';
+    el.dataset.job = job.id;
+    el.dataset.state = 'pending';
+
+    const needs = job.needs || [];
+    const needsHtml = needs.length
+      ? '<div class="job-needs"><span class="needs-label">needs</span>' +
+          needs.map(function (dep) {
+            return '<span class="need-chip">' + esc(dep) + '</span>';
+          }).join('') +
+        '</div>'
+      : '';
+
+    const stepsHtml = job.steps.map(function (step, index) {
+      const title = step.run ? step.name + '\n$ ' + step.run : step.name;
+      return '<li class="step" data-step="' + index + '" data-state="pending">' +
+               '<span class="status" data-role="step-status">' + ICONS.pending + '</span>' +
+               '<span class="step-name" title="' + esc(title) + '">' + esc(step.name) + '</span>' +
+               '<span class="step-dur" data-role="step-dur"></span>' +
+             '</li>';
+    }).join('');
+
+    el.innerHTML =
+      '<div class="job-head">' +
+        '<span class="status" data-role="job-status">' + ICONS.pending + '</span>' +
+        '<span class="job-name" title="' + esc(job.name) + '">' + esc(job.name) + '</span>' +
+        '<span class="job-id">' + esc(job.id) + '</span>' +
+        '<span class="job-dur" data-role="job-dur"></span>' +
+      '</div>' +
+      '<ol class="steps">' + stepsHtml + '</ol>' +
+      needsHtml;
+
+    el.title = needs.length ? '依赖：' + needs.join('、') : '';
+
+    jobEls.set(job.id, el);
+    el.querySelectorAll('.step').forEach(function (stepEl) {
+      stepEls.set(job.id + ':' + stepEl.dataset.step, stepEl);
+    });
+    return el;
+  }
+
+  function setJobState(jobId, state) {
+    const el = jobEls.get(jobId);
+    if (!el) return;
+    el.dataset.state = state;
+    const status = el.querySelector('[data-role="job-status"]');
+    if (status) status.innerHTML = ICONS[state] || ICONS.pending;
+  }
+
+  function setStepState(jobId, index, state, duration) {
+    const el = stepEls.get(jobId + ':' + index);
+    if (!el) return;
+    el.dataset.state = state;
+    const status = el.querySelector('[data-role="step-status"]');
+    if (status) status.innerHTML = ICONS[state] || ICONS.pending;
+    if (typeof duration === 'number') {
+      const dur = el.querySelector('[data-role="step-dur"]');
+      if (dur) dur.textContent = formatDuration(duration);
+    }
+  }
+
+  function setJobDuration(jobId, duration) {
+    const el = jobEls.get(jobId);
+    if (!el) return;
+    const dur = el.querySelector('[data-role="job-dur"]');
+    if (dur) dur.textContent = formatDuration(duration);
+  }
+
+  function resetGraphStates() {
+    jobEls.forEach(function (el) {
+      el.dataset.state = 'pending';
+      const jobStatus = el.querySelector('[data-role="job-status"]');
+      if (jobStatus) jobStatus.innerHTML = ICONS.pending;
+      const jobDur = el.querySelector('[data-role="job-dur"]');
+      if (jobDur) jobDur.textContent = '';
+      el.querySelectorAll('.step').forEach(function (stepEl) {
+        stepEl.dataset.state = 'pending';
+        const status = stepEl.querySelector('[data-role="step-status"]');
+        if (status) status.innerHTML = ICONS.pending;
+        const dur = stepEl.querySelector('[data-role="step-dur"]');
+        if (dur) dur.textContent = '';
+      });
+    });
+  }
+
+  /* ========================================================================
+     9. 运行状态条 / 按钮
+     ======================================================================== */
+  function setPhase(next, label) {
+    phase = next;
+    statusChipEl.dataset.state = next;
+    progressEl.dataset.state = next;
+    statusTextEl.textContent = label;
+    updateRunMeta();
+  }
+
+  function setProgress(done, total) {
+    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+    progressFillEl.style.width = percent + '%';
+    progressEl.setAttribute('aria-valuenow', String(percent));
+  }
+
+  function updateRunMeta() {
+    if (running) {
+      runMetaEl.textContent = jobDone + ' / ' + jobTotal + ' jobs';
+      return;
+    }
+    if (phase === 'success') {
+      runMetaEl.textContent = jobTotal + ' jobs · 全部通过';
+      return;
+    }
+    if (phase === 'failed') {
+      const bits = [jobTotal + ' jobs', failedJobs + ' 失败'];
+      if (skippedJobs) bits.push(skippedJobs + ' 跳过');
+      runMetaEl.textContent = bits.join(' · ');
+      return;
+    }
+    if (phase === 'stopped') {
+      runMetaEl.textContent = jobDone + ' / ' + jobTotal + ' jobs · 已停止';
+      return;
+    }
+    runMetaEl.textContent = jobTotal + ' jobs · ' + stepTotal + ' steps';
+  }
+
+  function syncButtons() {
+    runBtn.classList.toggle('is-stop', running);
+    runIconEl.textContent = running ? STOP_ICON : RUN_ICON;
+    runLabelEl.textContent = running ? '停止' : '运行 workflow';
+    runBtn.title = graphError
+      ? 'workflow 配置有误，请先修复'
+      : (running ? '停止当前运行' : '运行 workflow（Ctrl / ⌘ + Enter）');
+    runBtn.disabled = graphError;
+    editBtn.disabled = running;
+    editBtn.title = running ? '运行中不可编辑' : '编辑 workflow 配置';
+    resetBtn.disabled = false;
+    graphEl.classList.toggle('is-running', running);
+    graphEl.setAttribute('aria-busy', String(running));
+  }
+
+  function startTimer() {
+    stopTimer();
+    runTimerEl.textContent = '0.0s';
+    const startedAt = performance.now();
+    timerId = window.setInterval(function () {
+      runTimerEl.textContent = formatDuration(performance.now() - startedAt);
+    }, 100);
+  }
+
+  function stopTimer() {
+    if (timerId) {
+      window.clearInterval(timerId);
+      timerId = 0;
+    }
+  }
+
+  /* ========================================================================
+     10. 日志
+     ======================================================================== */
+  function isNearBottom() {
+    return consoleEl.scrollHeight - consoleEl.scrollTop - consoleEl.clientHeight < 56;
+  }
+
+  function updateLogCount() {
+    logCountEl.textContent = logCountValue + ' 行';
+  }
+
+  function log(kind, message) {
+    const stick = isNearBottom();
+    consoleEmptyEl.hidden = true;
+
+    const line = document.createElement('div');
+    line.className = 'log-line log-' + kind;
+
+    const time = document.createElement('span');
+    time.className = 'log-time';
+    time.textContent = '+' + ((performance.now() - runStart) / 1000).toFixed(1) + 's';
+
+    const msg = document.createElement('span');
+    msg.className = 'log-msg';
+    msg.textContent = message;
+
+    line.appendChild(time);
+    line.appendChild(msg);
+    consoleEl.appendChild(line);
+
+    logCountValue += 1;
+    updateLogCount();
+
+    if (autoScrollEl.checked && stick) {
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+  }
+
+  function consoleClear() {
+    consoleEl.querySelectorAll('.log-line').forEach(function (line) { line.remove(); });
+    logCountValue = 0;
+    updateLogCount();
+    consoleEmptyEl.hidden = false;
+  }
+
+  function copyText(text) {
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function' && window.isSecureContext) {
+        return navigator.clipboard.writeText(text).then(
+          function () { return true; },
+          function () { return fallbackCopy(text); }
+        );
+      }
+    } catch (err) { /* 回退到 execCommand */ }
+    return Promise.resolve(fallbackCopy(text));
+  }
+
+  function fallbackCopy(text) {
+    const previousFocus = document.activeElement;
+    try {
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;opacity:0;';
+      document.body.appendChild(area);
+      area.select();
+      const ok = document.execCommand('copy');
+      area.remove();
+      return ok;
+    } catch (err) {
+      return false;
+    } finally {
+      if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+    }
+  }
+
+  function copyLogs() {
+    if (logCountValue === 0) {
+      toast('暂无日志可复制', 'error');
+      return;
+    }
+    const lines = Array.prototype.slice.call(consoleEl.querySelectorAll('.log-line'));
+    const text = lines.map(function (line) {
+      const time = line.querySelector('.log-time');
+      const msg = line.querySelector('.log-msg');
+      return (time ? time.textContent : '') + ' ' + (msg ? msg.textContent : '');
+    }).join('\n');
+    copyText(text).then(function (ok) {
+      toast(ok ? '日志已复制到剪贴板' : '复制失败，请手动选择日志', ok ? 'success' : 'error');
+    });
+  }
+
+  function setLogFilter(filter) {
+    consoleEl.dataset.filter = filter;
+    filterBtns.forEach(function (btn) {
+      const active = btn.dataset.logFilter === filter;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  /* ========================================================================
+     11. 执行引擎
+     ======================================================================== */
+  async function runWorkflow() {
+    if (running) return;
+
+    const token = ++runToken;
+    running = true;
+    lastRunStartedAt = performance.now();
+    failedJobs = 0;
+    skippedJobs = 0;
+    jobDone = 0;
+    jobTotal = workflow.jobs.length;
+    stepTotal = countSteps(workflow.jobs);
+    runStart = performance.now();
+
+    consoleClear();
+    resetGraphStates();
+    setPhase('running', '运行中');
+    setProgress(0, jobTotal);
+    updateRunMeta();
+    startTimer();
+    syncButtons();
+    consoleEl.scrollTop = 0;
+
+    let orderedJobs;
+    try {
+      const stages = computeStages(workflow.jobs);
+      // 按依赖层级展平，保证依赖总是先于下游注册到 promises 中
+      orderedJobs = stages.reduce(function (acc, stage) { return acc.concat(stage); }, []);
+    } catch (err) {
+      running = false;
+      stopTimer();
+      setPhase('failed', '配置错误');
+      log('error', '✗ ' + err.message);
+      syncButtons();
+      return;
+    }
+
+    log('info', '▶ Run workflow · ' + workflow.name);
+    log('muted', '  ' + jobTotal + ' 个 job / ' + stepTotal + ' 个步骤 · 触发方式 ' + (workflow.on || 'workflow_dispatch'));
+
+    const promises = new Map();
+
+    function startJob(job) {
+      const finished = runJob(job, promises, token).catch(function (err) {
+        if (err && err.message === 'cancelled') return 'cancelled';
+        console.error(err);
+        if (token === runToken) {
+          failedJobs += 1;
+          jobDone += 1;
+          setJobState(job.id, 'failed');
+          updateRunMeta();
+          setProgress(jobDone, jobTotal);
+          log('error', '✗ Job "' + job.name + '" 异常：' + (err && err.message ? err.message : String(err)));
+        }
+        return 'failed';
+      });
+      promises.set(job.id, finished);
+      return finished;
+    }
+
+    orderedJobs.forEach(startJob);
+
+    await Promise.all(Array.from(promises.values()));
+    if (token !== runToken) return;
+
+    running = false;
+    stopTimer();
+    const duration = performance.now() - runStart;
+    runTimerEl.textContent = formatDuration(duration);
+    jobDone = jobTotal;
+    setProgress(jobTotal, jobTotal);
+
+    if (failedJobs > 0) {
+      setPhase('failed', '失败');
+      log('error', '✗ Workflow 失败 · ' + failedJobs + ' 个 job 失败' +
+        (skippedJobs ? ' · ' + skippedJobs + ' 个跳过' : '') +
+        ' · 用时 ' + formatDuration(duration));
+    } else {
+      setPhase('success', '成功');
+      log('success', '✓ Workflow 成功 · 用时 ' + formatDuration(duration) +
+        (skippedJobs ? ' · ' + skippedJobs + ' 个 job 跳过' : '') + ' 🍜');
+    }
+    updateRunMeta();
+    syncButtons();
+  }
+
+  async function runJob(job, promises, token) {
+    const needs = job.needs || [];
+    const depStates = needs.length
+      ? await Promise.all(needs.map(function (id) {
+          return promises.get(id) || Promise.resolve('failed');
+        }))
+      : [];
+    if (token !== runToken) return 'cancelled';
+
+    if (depStates.some(function (state) { return state !== 'success'; })) {
+      setJobState(job.id, 'skipped');
+      skippedJobs += 1;
+      jobDone += 1;
+      updateRunMeta();
+      setProgress(jobDone, jobTotal);
+      log('warn', '⏭ Job "' + job.name + '" 跳过（依赖未成功）');
+      return 'skipped';
+    }
+
+    const jobStartedAt = performance.now();
+    setJobState(job.id, 'running');
+    log('job', '▶ Job "' + job.name + '"');
+
+    for (let index = 0; index < job.steps.length; index += 1) {
+      if (token !== runToken) return 'cancelled';
+      const step = job.steps[index];
+      const stepStartedAt = performance.now();
+
+      setStepState(job.id, index, 'running');
+      log('step', '[' + job.name + '] ' + step.name);
+      if (step.run) log('run', '    $ ' + step.run);
+
+      try {
+        await sleep(step.ms != null ? step.ms : 800, token);
+      } catch (err) {
+        return 'cancelled';
+      }
+      if (token !== runToken) return 'cancelled';
+
+      const stepDuration = performance.now() - stepStartedAt;
+      if (step.willFail) {
+        setStepState(job.id, index, 'failed', stepDuration);
+        setJobState(job.id, 'failed');
+        setJobDuration(job.id, performance.now() - jobStartedAt);
+        failedJobs += 1;
+        jobDone += 1;
+        updateRunMeta();
+        setProgress(jobDone, jobTotal);
+        log('error', '✗ ' + step.name + ' 失败：' + (step.failReason || '退出码 1'));
+        return 'failed';
+      }
+      setStepState(job.id, index, 'success', stepDuration);
+    }
+
+    setJobState(job.id, 'success');
+    setJobDuration(job.id, performance.now() - jobStartedAt);
+    jobDone += 1;
+    updateRunMeta();
+    setProgress(jobDone, jobTotal);
+    log('success', '✓ Job "' + job.name + '" 完成');
+    return 'success';
+  }
+
+  function toggleRun() {
+    if (running) {
+      // 防止双击「运行」时第二下误触停止
+      if (performance.now() - lastRunStartedAt < 450) return;
+      stopRun();
+    } else {
+      runWorkflow();
+    }
+  }
+
+  function stopRun() {
+    if (!running) return;
+    runToken += 1;
+    running = false;
+    stopTimer();
+    setPhase('stopped', '已停止');
+    log('warn', '⏹ 已手动停止 workflow');
+
+    jobEls.forEach(function (el) {
+      if (el.dataset.state === 'running') {
+        el.dataset.state = 'stopped';
+        const status = el.querySelector('[data-role="job-status"]');
+        if (status) status.innerHTML = ICONS.stopped;
+        el.querySelectorAll('.step[data-state="running"]').forEach(function (stepEl) {
+          stepEl.dataset.state = 'stopped';
+          const stepStatus = stepEl.querySelector('[data-role="step-status"]');
+          if (stepStatus) stepStatus.innerHTML = ICONS.stopped;
+        });
+      }
+    });
+    syncButtons();
+  }
+
+  function resetAll() {
+    const wasRunning = running;
+    runToken += 1;
+    running = false;
+    stopTimer();
+    jobTotal = workflow.jobs.length;
+    stepTotal = countSteps(workflow.jobs);
+    jobDone = 0;
+    failedJobs = 0;
+    skippedJobs = 0;
+    runStart = performance.now();
+
+    runTimerEl.textContent = '0.0s';
+    consoleClear();
+    resetGraphStates();
+    setPhase('idle', '空闲');
+    setProgress(0, jobTotal);
+    syncButtons();
+    log('muted', wasRunning
+      ? '已取消上一次运行。点击「运行 workflow」重新开始。'
+      : '就绪。点击「运行 workflow」开始煮面。');
+  }
+
+  /* ========================================================================
+     12. 编辑器弹窗
+     ======================================================================== */
+  function setEditorStatus(kind, text) {
+    editStatusEl.textContent = (kind === 'ok' ? '✓ ' : '✕ ') + text;
+    editStatusEl.classList.toggle('is-ok', kind === 'ok');
+    applyEditBtn.disabled = kind !== 'ok';
+  }
+
+  function parseEditor() {
+    const raw = editorEl.value.trim();
+    if (!raw) {
+      setEditorStatus('err', '内容为空');
+      return null;
+    }
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (err) {
+      setEditorStatus('err', 'JSON 解析失败：' + err.message);
+      return null;
+    }
+    try {
+      validateWorkflow(data);
+    } catch (err) {
+      setEditorStatus('err', err.message);
+      return null;
+    }
+    setEditorStatus('ok', '格式正确 · ' + data.jobs.length + ' 个 job / ' + countSteps(data.jobs) + ' 个 step');
+    return data;
+  }
+
+  function scheduleValidate() {
+    window.clearTimeout(validateTimer);
+    validateTimer = window.setTimeout(function () { parseEditor(); }, 220);
+  }
+
+  function setBackgroundInert(isInert) {
+    const children = document.body.children;
+    for (let index = 0; index < children.length; index += 1) {
+      const child = children[index];
+      if (child === modalEl || child === toastWrapEl || child.tagName === 'SCRIPT') continue;
+      if ('inert' in child) child.inert = isInert;
+      if (isInert) child.setAttribute('aria-hidden', 'true');
+      else child.removeAttribute('aria-hidden');
+    }
+  }
+
+  function openEditor() {
+    modalReturnFocus = document.activeElement;
+    editorEl.value = JSON.stringify(workflow, null, 2);
+    modalEl.hidden = false;
+    editorEl.focus();
+    setBackgroundInert(true);
+    parseEditor();
+    window.requestAnimationFrame(function () {
+      if (modalEl.hidden) return;
+      editorEl.focus();
+      editorEl.setSelectionRange(0, 0);
+      editorEl.scrollTop = 0;
+    });
+  }
+
+  function closeEditor() {
+    if (modalEl.hidden) return;
+    modalEl.hidden = true;
+    setBackgroundInert(false);
+    window.clearTimeout(validateTimer);
+    if (modalReturnFocus && typeof modalReturnFocus.focus === 'function') {
+      modalReturnFocus.focus();
+    }
+    modalReturnFocus = null;
+  }
+
+  function applyEditor() {
+    const data = parseEditor();
+    if (!data) {
+      editorEl.focus();
+      return;
+    }
+    workflow = normalizeWorkflow(data);
+    const saved = saveWorkflow();
+    render(workflow);
+    resetAll();
+    closeEditor();
+    toast(saved ? 'workflow 已应用' : 'workflow 已应用（本地保存失败，刷新后会丢失）', saved ? 'success' : 'error');
+  }
+
+  function formatEditor() {
+    const data = parseEditor();
+    if (!data) return;
+    editorEl.value = JSON.stringify(data, null, 2);
+    parseEditor();
+  }
+
+  function restoreDefaults() {
+    editorEl.value = JSON.stringify(DEFAULT_WORKFLOW, null, 2);
+    parseEditor();
+    toast('已载入默认配置，点击「应用」生效');
+  }
+
+  function trapFocus(event) {
+    const focusable = Array.prototype.slice.call(
+      modalEl.querySelectorAll(
+        'button:not([disabled]), textarea, input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+      )
+    );
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!modalEl.contains(document.activeElement)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
+      return;
+    }
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  function onEditorKeydown(event) {
+    if (event.key === 'Tab' && !event.shiftKey) {
+      event.preventDefault();
+      const start = editorEl.selectionStart;
+      const end = editorEl.selectionEnd;
+      editorEl.setRangeText('  ', start, end, 'end');
+      scheduleValidate();
+      return;
+    }
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      if (event.repeat) return;
+      event.preventDefault();
+      // 直接应用：内部会重新解析，避免被 220ms 防抖后的 disabled 状态卡住
+      applyEditor();
+    }
+  }
+
+  /* ========================================================================
+     13. Toast
+     ======================================================================== */
+  function toast(message, kind) {
+    while (toastWrapEl.children.length >= 3) {
+      toastWrapEl.firstElementChild.remove();
+    }
+    const el = document.createElement('div');
+    el.className = 'toast' + (kind ? ' toast-' + kind : '');
+    el.textContent = message;
+    toastWrapEl.appendChild(el);
+    window.setTimeout(function () {
+      el.classList.add('is-out');
+      window.setTimeout(function () { el.remove(); }, 200);
+    }, 2200);
+  }
+
+  /* ========================================================================
+     14. 控制台拖拽
+     ======================================================================== */
+  function consoleMaxHeight() {
+    const used = (topbarEl ? topbarEl.offsetHeight : 0) + (runbarEl ? runbarEl.offsetHeight : 0);
+    return Math.max(150, window.innerHeight - used - 112);
+  }
+
+  function setConsoleHeight(height) {
+    const max = consoleMaxHeight();
+    const next = clamp(height, 112, max);
+    consolePanelEl.style.height = next + 'px';
+    consoleResizerEl.setAttribute('aria-valuenow', String(Math.round(next)));
+    consoleResizerEl.setAttribute('aria-valuemax', String(Math.round(max)));
+  }
+
+  function updateConsoleAria() {
+    const actual = consolePanelEl.getBoundingClientRect().height;
+    consoleResizerEl.setAttribute('aria-valuenow', String(Math.round(actual)));
+    consoleResizerEl.setAttribute('aria-valuemax', String(Math.round(consoleMaxHeight())));
+  }
+
+  function bindResizer() {
+    consoleResizerEl.addEventListener('pointerdown', function (event) {
+      if (event.button !== 0) return;
+      dragState = {
+        startY: event.clientY,
+        startHeight: consolePanelEl.getBoundingClientRect().height
+      };
+      consoleResizerEl.setPointerCapture(event.pointerId);
+      consoleResizerEl.classList.add('is-active');
+      document.body.classList.add('is-resizing');
+      event.preventDefault();
+    });
+
+    consoleResizerEl.addEventListener('pointermove', function (event) {
+      if (!dragState) return;
+      setConsoleHeight(dragState.startHeight - (event.clientY - dragState.startY));
+    });
+
+    function endDrag(event) {
+      if (!dragState) return;
+      dragState = null;
+      consoleResizerEl.classList.remove('is-active');
+      document.body.classList.remove('is-resizing');
+      if (event && typeof consoleResizerEl.hasPointerCapture === 'function' &&
+          consoleResizerEl.hasPointerCapture(event.pointerId)) {
+        consoleResizerEl.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    consoleResizerEl.addEventListener('pointerup', endDrag);
+    consoleResizerEl.addEventListener('pointercancel', endDrag);
+    consoleResizerEl.addEventListener('dblclick', function () {
+      consolePanelEl.style.height = '';
+      window.requestAnimationFrame(updateConsoleAria);
+    });
+    consoleResizerEl.addEventListener('keydown', function (event) {
+      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+      event.preventDefault();
+      const current = consolePanelEl.getBoundingClientRect().height;
+      setConsoleHeight(current + (event.key === 'ArrowUp' ? 24 : -24));
+    });
+
+    window.addEventListener('resize', function () {
+      const inline = parseFloat(consolePanelEl.style.height);
+      if (Number.isFinite(inline) && window.innerWidth > 980) setConsoleHeight(inline);
+      else updateConsoleAria();
+    });
+    window.addEventListener('blur', function () {
+      if (dragState) endDrag(null);
+    });
+  }
+
+  /* ========================================================================
+     15. 速度
+     ======================================================================== */
+  function onSpeedInput() {
+    speed = clamp(parseFloat(speedEl.value) || 1, 0.5, 4);
+    speedEl.value = String(speed);
+    speedValEl.textContent = formatSpeed(speed);
+    try { localStorage.setItem(STORAGE_SPEED, String(speed)); } catch (err) { /* ignore */ }
+  }
+
+  /* ========================================================================
+     16. 事件绑定 / 启动
+     ======================================================================== */
+  function bindEvents() {
+    runBtn.addEventListener('click', toggleRun);
+    resetBtn.addEventListener('click', resetAll);
+    editBtn.addEventListener('click', openEditor);
+    speedEl.addEventListener('input', onSpeedInput);
+
+    copyLogsBtn.addEventListener('click', copyLogs);
+    clearLogsBtn.addEventListener('click', function () {
+      consoleClear();
+      toast('日志已清空');
+    });
+    autoScrollEl.addEventListener('change', function () {
+      if (autoScrollEl.checked) consoleEl.scrollTop = consoleEl.scrollHeight;
+    });
+    filterBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () { setLogFilter(btn.dataset.logFilter); });
+    });
+
+    closeEditBtn.addEventListener('click', closeEditor);
+    cancelEditBtn.addEventListener('click', closeEditor);
+    applyEditBtn.addEventListener('click', applyEditor);
+    formatBtn.addEventListener('click', formatEditor);
+    restoreBtn.addEventListener('click', restoreDefaults);
+    editorEl.addEventListener('input', scheduleValidate);
+    editorEl.addEventListener('keydown', onEditorKeydown);
+
+    modalEl.addEventListener('pointerdown', function (event) {
+      if (event.target === modalEl) closeEditor();
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (!modalEl.hidden) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeEditor();
+          return;
+        }
+        if (event.key === 'Tab' && !event.defaultPrevented) trapFocus(event);
+        return;
+      }
+      if (event.defaultPrevented || event.repeat) return;
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault();
+        if (!runBtn.disabled) toggleRun();
+      }
+    });
+
+    bindResizer();
+  }
+
+  speedEl.value = String(speed);
+  speedValEl.textContent = formatSpeed(speed);
+
+  bindEvents();
+  render(workflow);
+  resetAll();
+  window.requestAnimationFrame(updateConsoleAria);
+})();
+</script>
+</body>
+</html>
