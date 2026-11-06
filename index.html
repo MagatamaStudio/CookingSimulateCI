@@ -112,6 +112,9 @@ h1{
   font-family:var(--mono); font-size:11.5px; color:var(--text);
   min-width:30px; text-align:right; font-variant-numeric:tabular-nums;
 }
+.rate input[type="range"]{width:64px}
+.rate output{min-width:36px}
+.speed input[type="range"]:disabled{opacity:.45; cursor:not-allowed}
 
 button{
   display:inline-flex; align-items:center; justify-content:center; gap:6px;
@@ -180,6 +183,33 @@ button.primary.is-stop:hover:not(:disabled){background:linear-gradient(180deg,#f
   font-variant-numeric:tabular-nums; white-space:nowrap;
 }
 
+/* ---------- 结果提示条 ---------- */
+.run-notice{
+  flex:0 0 auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:8px 20px; border-bottom:1px solid rgba(248,81,73,.3);
+  background:rgba(248,81,73,.09); color:var(--text);
+  font-size:12.5px; line-height:1.5;
+  animation:notice-in .22s ease both;
+}
+.run-notice[hidden]{display:none}
+.notice-icon{
+  flex:0 0 18px; width:18px; height:18px; display:grid; place-items:center;
+  border-radius:50%; background:rgba(248,81,73,.18); color:var(--red);
+  font:700 11px var(--mono);
+}
+.notice-text{flex:1 1 240px; min-width:0; color:var(--text)}
+.notice-actions{display:flex; align-items:center; gap:6px; margin-left:auto}
+.notice-actions button{
+  padding:3px 9px; font-size:11.5px; color:var(--muted);
+  background:transparent; border-color:rgba(149,161,178,.25);
+}
+.notice-actions button:hover:not(:disabled){background:rgba(255,255,255,.06); color:var(--text); border-color:var(--border-strong)}
+.notice-close{padding:3px 7px; border-color:transparent; color:var(--dim)}
+.run-notice[data-kind="success"]{background:rgba(63,185,80,.09); border-bottom-color:rgba(63,185,80,.28)}
+.run-notice[data-kind="success"] .notice-icon{background:rgba(63,185,80,.18); color:var(--green)}
+.run-notice[data-kind="stopped"]{background:rgba(149,161,178,.08); border-bottom-color:rgba(149,161,178,.25)}
+.run-notice[data-kind="stopped"] .notice-icon{background:rgba(149,161,178,.15); color:var(--muted)}
+
 /* ==========================================================================
    4. 依赖图 / pipeline
    ========================================================================== */
@@ -194,7 +224,8 @@ button.primary.is-stop:hover:not(:disabled){background:linear-gradient(180deg,#f
   background-position:-1px -1px;
 }
 .stage{
-  display:flex; flex-direction:column; gap:12px; flex:0 0 auto; width:240px;
+  display:flex; flex-direction:column; gap:12px; flex:0 0 auto;
+  width:clamp(205px, 16.5vw, 248px);
   animation:stage-in .35s cubic-bezier(.2,.7,.3,1) both;
 }
 .stage-label{
@@ -206,7 +237,7 @@ button.primary.is-stop:hover:not(:disabled){background:linear-gradient(180deg,#f
 .stage-count{color:var(--dim); white-space:nowrap}
 .stage-jobs{display:flex; flex-direction:column; gap:14px}
 .connector{
-  flex:0 0 42px; align-self:stretch; display:flex; justify-content:center;
+  flex:0 0 40px; align-self:stretch; display:flex; justify-content:center;
   padding-top:40px; color:#3d4654;
   animation:stage-in .35s ease both;
 }
@@ -234,6 +265,7 @@ button.primary.is-stop:hover:not(:disabled){background:linear-gradient(180deg,#f
   box-shadow:0 0 0 1px rgba(248,81,73,.18), 0 18px 36px -26px rgba(248,81,73,.6);
 }
 .job[data-state="failed"]::before{background:var(--red)}
+.job[data-state="failed"]{animation:fail-pulse .7s ease-out 1}
 .job[data-state="skipped"]{opacity:.55}
 .job[data-state="skipped"]::before{background:var(--dim)}
 .job[data-state="stopped"]{opacity:.78; border-color:rgba(149,161,178,.35)}
@@ -453,6 +485,11 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   100%{box-shadow:0 0 0 0 rgba(210,153,34,0)}
 }
 @keyframes flow{0%,100%{opacity:.35} 50%{opacity:1}}
+@keyframes notice-in{from{opacity:0; transform:translateY(-4px)} to{opacity:1; transform:none}}
+@keyframes fail-pulse{
+  0%{box-shadow:0 0 0 0 rgba(248,81,73,.55)}
+  100%{box-shadow:0 0 0 12px rgba(248,81,73,0)}
+}
 
 @media (hover:hover){
   .job:hover{transform:translateY(-2px); border-color:var(--border-strong)}
@@ -489,6 +526,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   .toolbar{width:100%; justify-content:flex-start}
   .run-btn{flex:1 1 auto}
   .speed{order:-1}
+  .speed span{display:none}
   .runbar{padding:8px 14px; gap:10px}
   .run-meta{display:none}
   .progress{flex-basis:100%; order:5}
@@ -541,6 +579,12 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
              aria-label="模拟速度" title="调整模拟速度">
       <output id="speedVal" for="speed">1×</output>
     </label>
+    <label class="speed rate" for="failureRate">
+      <span>随机故障</span>
+      <input type="range" id="failureRate" min="0" max="100" step="1" value="10"
+             aria-label="随机故障率" title="每个 job 随机失败的概率，用于演示失败传播">
+      <output id="failureRateVal" for="failureRate">10%</output>
+    </label>
     <span class="toolbar-sep" aria-hidden="true"></span>
     <button id="editBtn" type="button" title="编辑 workflow 配置">编辑</button>
     <button id="resetBtn" type="button" title="重置状态与日志">重置</button>
@@ -564,6 +608,16 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   </div>
   <span class="run-timer" id="runTimer" title="本次运行计时">0.0s</span>
 </section>
+
+<!-- ===================== 结果提示 ===================== -->
+<div class="run-notice" id="runNotice" hidden role="alert" aria-live="assertive">
+  <span class="notice-icon" id="runNoticeIcon" aria-hidden="true">!</span>
+  <span class="notice-text" id="runNoticeText"></span>
+  <div class="notice-actions">
+    <button id="noticeLogsBtn" type="button">查看日志</button>
+    <button class="notice-close" id="noticeCloseBtn" type="button" aria-label="关闭提示">✕</button>
+  </div>
+</div>
 
 <!-- ===================== 依赖图 ===================== -->
 <main class="graph" id="graph" aria-label="workflow 依赖图" tabindex="0"></main>
@@ -606,7 +660,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       <button class="modal-close" id="closeEdit" type="button" aria-label="关闭编辑弹窗">✕</button>
     </div>
     <div class="hint">
-      顶层：<code>name</code> <code>on</code> <code>jobs</code>　·　
+      顶层：<code>name</code> <code>on</code> <code>jobs</code> <code>failureRate</code>（0–1，每个 job 随机失败概率）　·　
       job：<code>id</code> <code>name</code> <code>needs</code> <code>steps</code>　·　
       step：<code>name</code> <code>run</code> <code>ms</code> <code>willFail</code> <code>failReason</code>
     </div>
@@ -644,50 +698,64 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   };
 
   /* ========================================================================
-     2. 默认 workflow：煮一碗面
+     2. 默认 workflow：煮一碗面 · 真实 CI 流程
      ======================================================================== */
   const DEFAULT_WORKFLOW = {
     name: "煮一碗面",
     on: "workflow_dispatch",
+    failureRate: 0.1,
     jobs: [
       {
         id: "prep",
         name: "备料",
         needs: [],
         steps: [
-          { name: "取出挂面", run: "take-pasta --weight 100g",            ms: 700 },
-          { name: "洗净青菜", run: "wash --veg bokchoy --drain",          ms: 900 },
-          { name: "切葱花",   run: "chop --item scallion --style fine",   ms: 800 },
-          { name: "调汤底",   run: "make-sauce --soy 2tbsp --oil sesame", ms: 900 }
+          { name: "取菜谱仓库", run: "actions/checkout@v4",                    ms: 500 },
+          { name: "准备灶台",   run: "actions/setup-kitchen@v2 --node 22",      ms: 500 },
+          { name: "从冰箱取料", run: "actions/cache@v4 --restore recipe.lock", ms: 600 },
+          { name: "洗净青菜",   run: "wash --veg bokchoy --drain",              ms: 700 },
+          { name: "切葱花",     run: "chop --item scallion --style fine",       ms: 600 }
         ]
       },
       {
         id: "boil",
         name: "烧水",
-        needs: [],
+        needs: ["prep"],
         steps: [
-          { name: "接水入锅", run: "fill-pot --water 1500ml",      ms: 700 },
-          { name: "大火加热", run: "heat --level high",            ms: 1800 },
-          { name: "确认沸腾", run: "assert boiling --timeout 300s", ms: 700 }
+          { name: "拉取汤底镜像", run: "docker pull kitchen/broth:latest",     ms: 700 },
+          { name: "安装依赖",     run: "npm ci --prefer-offline",               ms: 1000 },
+          { name: "大火加热",     run: "heat --level high --watch",             ms: 1400 },
+          { name: "确认沸腾",     run: "healthcheck --retries 3 --interval 1s", ms: 600 }
+        ]
+      },
+      {
+        id: "lint",
+        name: "洗菜检查",
+        needs: ["prep"],
+        steps: [
+          { name: "检查菜叶",     run: "npm run lint -- --max-warnings 0",  ms: 800 },
+          { name: "检查厨具脚本", run: "shellcheck scripts/*.sh",            ms: 600 },
+          { name: "校验菜谱格式", run: "ajv validate -s recipe.schema.json", ms: 600 }
         ]
       },
       {
         id: "cook",
         name: "煮面",
-        needs: ["boil"],
+        needs: ["boil", "lint"],
         steps: [
-          { name: "面条下锅", run: "add-pasta --scatter --stir",            ms: 1000 },
-          { name: "点冷水",   run: "add-coldwater --volume 200ml --times 2", ms: 1400 },
-          { name: "检查熟度", run: "check-doneness --no-white-core",         ms: 700 }
+          { name: "面条下锅", run: "npm run build",                                  ms: 900 },
+          { name: "点冷水",   run: "npm test -- --coverage",                          ms: 1200 },
+          { name: "尝咸淡",   run: "npm run test:integration",                        ms: 900 },
+          { name: "检查熟度", run: "assert doneness --no-white-core --timeout 300s",  ms: 600 }
         ]
       },
       {
         id: "season",
         name: "冲汤",
-        needs: ["prep", "cook"],
+        needs: ["cook"],
         steps: [
-          { name: "冲入面汤", run: "pour-soup --from pot --volume 2ladles", ms: 800 },
-          { name: "烫青菜",   run: "blanch --veg bokchoy --seconds 20",     ms: 900 }
+          { name: "冲入面汤", run: "deploy --env staging --from dist/",              ms: 800 },
+          { name: "烫青菜",   run: "smoke-test --url https://staging.kitchen.local", ms: 800 }
         ]
       },
       {
@@ -695,8 +763,9 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
         name: "出锅",
         needs: ["season"],
         steps: [
-          { name: "捞面入碗", run: "transfer --pasta bowl --garnish scallion", ms: 900 },
-          { name: "上桌",     run: "serve --hot",                              ms: 600 }
+          { name: "捞面入碗", run: "actions/upload-artifact@v4 --name noodle-bowl --path dist/", ms: 700 },
+          { name: "上桌",     run: "actions/deploy-pages@v4 --environment production",            ms: 900 },
+          { name: "拍照打卡", run: "notify --channel dinner --status ${{ job.status }}",           ms: 500 }
         ]
       }
     ]
@@ -714,6 +783,8 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   const triggerBadgeEl = document.getElementById('triggerBadge');
   const speedEl       = document.getElementById('speed');
   const speedValEl    = document.getElementById('speedVal');
+  const failureRateEl = document.getElementById('failureRate');
+  const failureRateValEl = document.getElementById('failureRateVal');
   const editBtn       = document.getElementById('editBtn');
   const resetBtn      = document.getElementById('resetBtn');
   const runBtn        = document.getElementById('runBtn');
@@ -750,6 +821,11 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   const restoreBtn    = document.getElementById('restoreBtn');
 
   const toastWrapEl   = document.getElementById('toastWrap');
+  const runNoticeEl   = document.getElementById('runNotice');
+  const runNoticeIconEl = document.getElementById('runNoticeIcon');
+  const runNoticeTextEl = document.getElementById('runNoticeText');
+  const noticeLogsBtn = document.getElementById('noticeLogsBtn');
+  const noticeCloseBtn = document.getElementById('noticeCloseBtn');
 
   /* ========================================================================
      4. 状态
@@ -828,6 +904,13 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     if (candidate.on != null && typeof candidate.on !== 'string') {
       throw new Error('on 必须是字符串');
     }
+    if (candidate.failureRate != null &&
+        (typeof candidate.failureRate !== 'number' ||
+         !Number.isFinite(candidate.failureRate) ||
+         candidate.failureRate < 0 ||
+         candidate.failureRate > 1)) {
+      throw new Error('failureRate 必须是 0 到 1 之间的数字');
+    }
     if (!Array.isArray(candidate.jobs) || candidate.jobs.length === 0) {
       throw new Error('缺少非空的 jobs 数组');
     }
@@ -889,6 +972,9 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     return {
       name: candidate.name && candidate.name.trim() ? candidate.name.trim() : '未命名 workflow',
       on: candidate.on && candidate.on.trim() ? candidate.on.trim() : 'workflow_dispatch',
+      failureRate: typeof candidate.failureRate === 'number'
+        ? clamp(candidate.failureRate, 0, 1)
+        : 0.1,
       jobs: candidate.jobs.map(function (job) {
         return {
           id: job.id.trim(),
@@ -985,6 +1071,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   function render(wf) {
     wfNameEl.textContent = wf.name || 'workflow';
     triggerBadgeEl.textContent = wf.on || 'workflow_dispatch';
+    syncFailureRateUI(wf);
     document.title = (wf.name || 'workflow') + ' · 煮面 CI';
     jobEls.clear();
     stepEls.clear();
@@ -1091,6 +1178,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       needsHtml;
 
     el.title = needs.length ? '依赖：' + needs.join('、') : '';
+    el.dataset.baseTitle = el.title;
 
     jobEls.set(job.id, el);
     el.querySelectorAll('.step').forEach(function (stepEl) {
@@ -1129,6 +1217,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   function resetGraphStates() {
     jobEls.forEach(function (el) {
       el.dataset.state = 'pending';
+      if (el.dataset.baseTitle != null) el.title = el.dataset.baseTitle;
       const jobStatus = el.querySelector('[data-role="job-status"]');
       if (jobStatus) jobStatus.innerHTML = ICONS.pending;
       const jobDur = el.querySelector('[data-role="job-dur"]');
@@ -1151,7 +1240,16 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     statusChipEl.dataset.state = next;
     progressEl.dataset.state = next;
     statusTextEl.textContent = label;
+    updateDocumentTitle(next);
     updateRunMeta();
+  }
+
+  function updateDocumentTitle(nextPhase) {
+    const prefix = nextPhase === 'failed' ? '❌ '
+      : nextPhase === 'success' ? '✓ '
+      : nextPhase === 'running' ? '▶ '
+      : nextPhase === 'stopped' ? '■ ' : '';
+    document.title = prefix + (workflow.name || 'workflow') + ' · 煮面 CI';
   }
 
   function setProgress(done, total) {
@@ -1193,6 +1291,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     editBtn.disabled = running;
     editBtn.title = running ? '运行中不可编辑' : '编辑 workflow 配置';
     resetBtn.disabled = false;
+    failureRateEl.disabled = running;
     graphEl.classList.toggle('is-running', running);
     graphEl.setAttribute('aria-busy', String(running));
   }
@@ -1328,6 +1427,8 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     jobDone = 0;
     jobTotal = workflow.jobs.length;
     stepTotal = countSteps(workflow.jobs);
+    const failureRate = clamp(typeof workflow.failureRate === 'number' ? workflow.failureRate : 0, 0, 1);
+    const failurePercent = Math.round(failureRate * 100);
     runStart = performance.now();
 
     consoleClear();
@@ -1354,12 +1455,13 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     }
 
     log('info', '▶ Run workflow · ' + workflow.name);
-    log('muted', '  ' + jobTotal + ' 个 job / ' + stepTotal + ' 个步骤 · 触发方式 ' + (workflow.on || 'workflow_dispatch'));
+    log('muted', '  ' + jobTotal + ' 个 job / ' + stepTotal + ' 个步骤 · 触发方式 ' + (workflow.on || 'workflow_dispatch') +
+      ' · 随机故障率 ' + failurePercent + '%');
 
     const promises = new Map();
 
     function startJob(job) {
-      const finished = runJob(job, promises, token).catch(function (err) {
+      const finished = runJob(job, promises, token, failureRate, failurePercent).catch(function (err) {
         if (err && err.message === 'cancelled') return 'cancelled';
         console.error(err);
         if (token === runToken) {
@@ -1402,7 +1504,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     syncButtons();
   }
 
-  async function runJob(job, promises, token) {
+  async function runJob(job, promises, token, failureRate, failurePercent) {
     const needs = job.needs || [];
     const depStates = needs.length
       ? await Promise.all(needs.map(function (id) {
@@ -1412,15 +1514,23 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     if (token !== runToken) return 'cancelled';
 
     if (depStates.some(function (state) { return state !== 'success'; })) {
+      const failedDeps = needs.filter(function (id, index) { return depStates[index] !== 'success'; });
       setJobState(job.id, 'skipped');
+      const skippedEl = jobEls.get(job.id);
+      if (skippedEl) skippedEl.title = '已跳过：依赖 ' + failedDeps.join('、') + ' 未成功';
       skippedJobs += 1;
       jobDone += 1;
       updateRunMeta();
       setProgress(jobDone, jobTotal);
-      log('warn', '⏭ Job "' + job.name + '" 跳过（依赖未成功）');
+      log('warn', '⏭ Job "' + job.name + '" 跳过（依赖未成功：' + failedDeps.join('、') + '）');
       return 'skipped';
     }
 
+    // 每个真正启动的 job 掷一次骰子；命中时随机挑一个 step 失败，用于演示失败传播
+    const hasExplicitFailure = job.steps.some(function (step) { return step.willFail === true; });
+    const injectedIndex = (failureRate > 0 && !hasExplicitFailure && Math.random() < failureRate)
+      ? Math.floor(Math.random() * job.steps.length)
+      : -1;
     const jobStartedAt = performance.now();
     setJobState(job.id, 'running');
     log('job', '▶ Job "' + job.name + '"');
@@ -1442,15 +1552,24 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       if (token !== runToken) return 'cancelled';
 
       const stepDuration = performance.now() - stepStartedAt;
-      if (step.willFail) {
+      const isInjectedFailure = injectedIndex === index;
+      if (step.willFail || isInjectedFailure) {
+        const failureReason = step.willFail
+          ? (step.failReason || '退出码 1')
+          : '随机故障注入（模拟 flaky step）';
         setStepState(job.id, index, 'failed', stepDuration);
         setJobState(job.id, 'failed');
+        const failedEl = jobEls.get(job.id);
+        if (failedEl) failedEl.title = '失败：' + failureReason;
         setJobDuration(job.id, performance.now() - jobStartedAt);
         failedJobs += 1;
         jobDone += 1;
         updateRunMeta();
         setProgress(jobDone, jobTotal);
-        log('error', '✗ ' + step.name + ' 失败：' + (step.failReason || '退出码 1'));
+        if (isInjectedFailure && !step.willFail) {
+          log('warn', '🎲 随机故障命中：' + step.name + '（每个 job ' + failurePercent + '% 概率）');
+        }
+        log('error', '✗ ' + step.name + ' 失败：' + failureReason);
         return 'failed';
       }
       setStepState(job.id, index, 'success', stepDuration);
@@ -1486,6 +1605,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     jobEls.forEach(function (el) {
       if (el.dataset.state === 'running') {
         el.dataset.state = 'stopped';
+        el.title = '已停止';
         const status = el.querySelector('[data-role="job-status"]');
         if (status) status.innerHTML = ICONS.stopped;
         el.querySelectorAll('.step[data-state="running"]').forEach(function (stepEl) {
@@ -1673,10 +1793,24 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     el.className = 'toast' + (kind ? ' toast-' + kind : '');
     el.textContent = message;
     toastWrapEl.appendChild(el);
+    const lifetime = kind === 'error' ? 4800 : 2400;
     window.setTimeout(function () {
       el.classList.add('is-out');
       window.setTimeout(function () { el.remove(); }, 200);
-    }, 2200);
+    }, lifetime);
+  }
+
+  function showNotice(kind, message) {
+    runNoticeEl.dataset.kind = kind;
+    runNoticeEl.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+    runNoticeEl.setAttribute('aria-live', kind === 'error' ? 'assertive' : 'polite');
+    runNoticeIconEl.textContent = kind === 'success' ? '✓' : kind === 'stopped' ? '■' : '!';
+    runNoticeTextEl.textContent = message;
+    runNoticeEl.hidden = false;
+  }
+
+  function hideNotice() {
+    runNoticeEl.hidden = true;
   }
 
   /* ========================================================================
@@ -1763,6 +1897,19 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     try { localStorage.setItem(STORAGE_SPEED, String(speed)); } catch (err) { /* ignore */ }
   }
 
+  function syncFailureRateUI(wf) {
+    const rate = clamp(typeof wf.failureRate === 'number' ? wf.failureRate : 0, 0, 1);
+    const percent = Math.round(rate * 100);
+    failureRateEl.value = String(percent);
+    failureRateValEl.textContent = percent + '%';
+  }
+
+  function onFailureRateInput() {
+    const percent = clamp(parseFloat(failureRateEl.value) || 0, 0, 100);
+    workflow.failureRate = percent / 100;
+    failureRateValEl.textContent = Math.round(percent) + '%';
+  }
+
   /* ========================================================================
      16. 事件绑定 / 启动
      ======================================================================== */
@@ -1771,6 +1918,8 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     resetBtn.addEventListener('click', resetAll);
     editBtn.addEventListener('click', openEditor);
     speedEl.addEventListener('input', onSpeedInput);
+    failureRateEl.addEventListener('input', onFailureRateInput);
+    failureRateEl.addEventListener('change', saveWorkflow);
 
     copyLogsBtn.addEventListener('click', copyLogs);
     clearLogsBtn.addEventListener('click', function () {
