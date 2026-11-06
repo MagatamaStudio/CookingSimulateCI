@@ -435,18 +435,6 @@ body.is-resizing *{cursor:row-resize !important}
   font:11px var(--mono); padding:1px 5px; border-radius:4px;
   background:rgba(255,255,255,.05); color:var(--muted);
 }
-.presets{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
-.presets-label{
-  font:600 10.5px var(--mono); color:var(--dim); letter-spacing:.1em;
-  text-transform:uppercase; white-space:nowrap;
-}
-.preset-list{display:flex; flex-wrap:wrap; gap:6px}
-.preset-chip{
-  padding:3px 10px; font-size:11.5px; color:var(--muted);
-  background:rgba(255,255,255,.02); border-color:var(--border);
-}
-.preset-chip:hover:not(:disabled){background:rgba(88,166,255,.1); border-color:rgba(88,166,255,.35); color:var(--blue)}
-.preset-chip.is-active{background:rgba(88,166,255,.12); border-color:rgba(88,166,255,.4); color:var(--blue)}
 textarea{
   width:100%; height:52vh; min-height:240px; resize:vertical; padding:12px 14px;
   border-radius:var(--radius); border:1px solid var(--border);
@@ -854,7 +842,11 @@ button.primary.is-stop:hover:not(:disabled){background:var(--gh-danger); border-
 .workflow-file{font:12px var(--mono); color:var(--gh-accent); word-break:break-all; display:block}
 .sidebar-value{font-size:13px; color:var(--gh-fg)}
 .sidebar-muted{font-size:12px; color:var(--gh-muted); margin:0}
-.workflow-nav{display:flex; flex-direction:column; gap:2px; margin-top:4px}
+.workflow-nav{
+  display:flex; flex-direction:column; gap:2px; margin-top:4px;
+  max-height:220px; overflow:auto; padding-right:2px;
+  scrollbar-width:thin; scrollbar-color:var(--gh-border) transparent;
+}
 .workflow-nav button{
   display:flex; align-items:center; justify-content:flex-start; gap:6px;
   width:100%; height:30px; padding:0 8px;
@@ -912,6 +904,11 @@ button.primary.is-stop:hover:not(:disabled){background:var(--gh-danger); border-
 /* ---------- 日志 ---------- */
 .console-resizer{flex:0 0 8px; touch-action:none}
 .console-resizer::after{background:#484f58}
+.jobs-panel .console-resizer{border-top:1px solid var(--gh-border); background:var(--gh-subtle)}
+.jobs-panel .console-resizer::after{opacity:.65}
+.jobs-panel .console-resizer:hover::after,
+.jobs-panel .console-resizer:focus-visible::after,
+.jobs-panel .console-resizer.is-active::after{opacity:1; background:var(--gh-accent)}
 .console-panel{
   flex:0 0 auto; height:300px; min-height:140px;
   border:1px solid var(--gh-border); border-radius:6px; background:var(--gh-canvas);
@@ -980,12 +977,6 @@ button.primary.is-stop:hover:not(:disabled){background:var(--gh-danger); border-
 .modal-close:hover:not(:disabled){background:#21262d; color:var(--gh-fg)}
 .hint{color:var(--gh-muted)}
 .hint code{background:#21262d; color:var(--gh-fg)}
-.preset-chip{
-  height:28px; padding:0 10px; font-size:12px; background:var(--gh-subtle);
-  border-color:var(--gh-border); color:var(--gh-fg);
-}
-.preset-chip:hover:not(:disabled){background:#30363d; border-color:#8b949e; color:var(--gh-fg)}
-.preset-chip.is-active{background:var(--gh-accent-subtle); border-color:var(--gh-accent); color:var(--gh-accent)}
 textarea{
   background:var(--gh-header); color:var(--gh-fg); border-color:var(--gh-border);
   font:12px/1.6 ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
@@ -1009,6 +1000,7 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
   .jobs-panel{min-height:280px}
   .sidebar{flex-basis:auto; width:100%; overflow:visible}
   .run-actions{justify-content:flex-start}
+  .console-resizer{display:none}
 }
 @media (max-width:900px){
   .gh-nav,.gh-search{display:none}
@@ -1151,7 +1143,7 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
         <input type="range" id="speed" min="0.5" max="4" step="0.5" value="1" aria-label="Simulation speed" title="Simulation speed">
         <output id="speedVal" for="speed">1×</output>
       </label>
-      <button id="editBtn" type="button" title="Edit workflow / load a dish example">Edit workflow</button>
+      <button id="editBtn" type="button" title="Edit workflow JSON">Edit workflow</button>
       <button id="resetBtn" type="button" title="Reset run">Reset</button>
       <button class="primary run-btn" id="runBtn" type="button">
         <span class="run-icon" id="runIcon" aria-hidden="true"></span>
@@ -1186,6 +1178,9 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
         <span class="panel-sub" id="jobsCount">0 jobs</span>
       </div>
       <div class="graph" id="graph" aria-label="workflow 依赖图" tabindex="0"></div>
+      <div class="console-resizer" id="consoleResizer" role="separator" aria-orientation="horizontal"
+           aria-controls="consolePanel" aria-valuemin="140" aria-valuemax="800" aria-valuenow="300"
+           aria-label="Drag to resize Jobs and Logs; arrow keys to adjust; double-click to reset" tabindex="0"></div>
     </section>
 
     <aside class="sidebar" aria-label="Run details">
@@ -1215,9 +1210,6 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
   </div>
 
   <!-- ===================== 日志 ===================== -->
-  <div class="console-resizer" id="consoleResizer" role="separator" aria-orientation="horizontal"
-       aria-controls="consolePanel" aria-valuemin="140" aria-valuemax="800" aria-valuenow="300"
-       aria-label="Drag to resize logs; arrow keys to adjust; double-click to reset" tabindex="0"></div>
   <section class="console-panel" id="consolePanel" aria-label="Run logs">
     <div class="console-head">
       <h2 class="console-title">Logs</h2>
@@ -1247,14 +1239,10 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
     <div class="modal-head">
       <div>
-        <h2 id="editorTitle">Edit workflow / Examples</h2>
-        <p class="modal-sub">JSON workflow · load an example dish · saved to localStorage</p>
+        <h2 id="editorTitle">Edit workflow</h2>
+        <p class="modal-sub">JSON workflow · changes are saved to localStorage on Apply</p>
       </div>
       <button class="modal-close" id="closeEdit" type="button" aria-label="Close dialog">✕</button>
-    </div>
-    <div class="presets" role="group" aria-label="Example workflows">
-      <span class="presets-label">Examples</span>
-      <div class="preset-list" id="presetList"></div>
     </div>
     <div class="hint">
       Top level：<code>name</code> <code>on</code> <code>jobs</code>　·　
@@ -1268,7 +1256,7 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
       <span class="modal-hint">Ctrl / ⌘ + Enter apply · Esc close</span>
     </div>
     <div class="modal-actions">
-      <button id="restoreBtn" type="button">Restore default</button>
+      <button id="restoreBtn" type="button">Revert</button>
       <button id="formatBtn" type="button">Format</button>
       <span class="flex-spacer"></span>
       <button id="cancelEdit" type="button">Cancel</button>
@@ -1369,7 +1357,98 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
   };
 
   /* ========================================================================
-     2.1 其他菜品示例 workflow
+     2.1 更合理的步骤耗时
+     ======================================================================== */
+  function timingForStep(step) {
+    const run = String(step.run || '');
+    const rules = [
+      [/npm run build/, 1200],
+      [/npm test/, 1500],
+      [/npm run test:integration/, 1200],
+      [/npm run lint/, 900],
+      [/npm ci/, 1000],
+      [/shellcheck/, 700],
+      [/ajv/, 700],
+      [/smoke-test/, 900],
+      [/healthcheck/, 600],
+      [/actions\/checkout/, 400],
+      [/actions\/setup-kitchen/, 450],
+      [/actions\/cache/, 500],
+      [/actions\/upload-artifact/, 700],
+      [/actions\/deploy-pages/, 1000],
+      [/docker pull/, 700],
+      [/simmer|steam|braise|roast|bake|rest --dough/, 3000],
+      [/deep-fry/, 1800],
+      [/stir-fry/, 1300],
+      [/sear/, 1300],
+      [/scramble/, 1000],
+      [/blanch/, 900],
+      [/boil/, 1200],
+      [/reduce|caramel/, 1200],
+      [/marinate|temper/, 1500],
+      [/knead/, 1600],
+      [/heat|preheat/, 900],
+      [/wash/, 600],
+      [/shred|slice/, 900],
+      [/chop|dice|mince|cut/, 800],
+      [/peel|score/, 700],
+      [/beat|whisk/, 700],
+      [/fold/, 1000],
+      [/roll/, 900],
+      [/mix|combine|toss/, 800],
+      [/plate|arrange|scoop|dip|garnish/, 600],
+      [/\bserve\b/, 400],
+      [/taste|check|verify|assert/, 600],
+      [/prepare/, 800],
+      [/add/, 700],
+      [/cook --pasta/, 1800],
+      [/cook/, 1000],
+      [/cool/, 800],
+      [/chill/, 600],
+      [/notify/, 500],
+      [/deploy/, 900],
+      [/fry/, 1200],
+      [/pour-soup|make-sauce/, 800]
+    ];
+    for (let i = 0; i < rules.length; i += 1) {
+      if (rules[i][0].test(run)) return rules[i][1];
+    }
+    const first = run.split(/\s+/)[0] || '';
+    const exact = {
+      "actions/checkout@v4": 400,
+      "actions/setup-kitchen@v2": 450,
+      "actions/cache@v4": 500,
+      "actions/upload-artifact@v4": 700,
+      "actions/deploy-pages@v4": 1000,
+      "fill-pot": 700,
+      "take-pasta": 500,
+      "add-pasta": 800,
+      "add-coldwater": 700,
+      "check-doneness": 600,
+      "transfer": 700,
+      "serve": 400,
+      "make-sauce": 800,
+      "pour-soup": 800,
+      "drain": 500,
+      "thicken": 700,
+      "scoop": 500
+    };
+    if (exact[first] != null) return exact[first];
+    return clamp(step.ms || 700, 300, 4000);
+  }
+
+  function tuneWorkflow(wf) {
+    const copy = deepCopy(wf);
+    copy.jobs.forEach(function (job) {
+      job.steps.forEach(function (step) {
+        step.ms = timingForStep(step);
+      });
+    });
+    return copy;
+  }
+
+  /* ========================================================================
+     2.2 其他菜品示例 workflow
      ======================================================================== */
   const DISH_PRESETS = [
     {
@@ -1630,8 +1709,633 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
           }
         ]
       }
+    },
+    {
+      id: "mapo-tofu",
+      label: "麻婆豆腐",
+      describe: "备料 → 焯豆腐 → 炒制 → 调味 → 装盘",
+      file: ".github/workflows/mapo-tofu.yml",
+      workflow: {
+        name: "麻婆豆腐",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep", name: "备料", needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4", ms: 400 },
+              { name: "准备炒锅", run: "actions/setup-kitchen@v2 --wok 32cm", ms: 450 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore mapo", ms: 500 },
+              { name: "切豆腐", run: "cut --tofu --cube 2cm", ms: 800 },
+              { name: "剁肉末", run: "mince --pork --fine", ms: 800 }
+            ]
+          },
+          {
+            id: "blanch", name: "焯豆腐", needs: ["prep"],
+            steps: [
+              { name: "烧水", run: "boil --water", ms: 1200 },
+              { name: "焯豆腐", run: "blanch --tofu --salt", ms: 900 },
+              { name: "沥水", run: "drain --tofu", ms: 500 }
+            ]
+          },
+          {
+            id: "fry", name: "炒制", needs: ["blanch"],
+            steps: [
+              { name: "热油", run: "heat --level high --oil 2tbsp", ms: 800 },
+              { name: "炒肉末", run: "fry --pork --until crispy", ms: 1000 },
+              { name: "下豆瓣酱", run: "add --douban 1tbsp", ms: 900 },
+              { name: "下豆腐", run: "add --tofu --gentle", ms: 1000 }
+            ]
+          },
+          {
+            id: "season", name: "调味", needs: ["fry"],
+            steps: [
+              { name: "小火烧入味", run: "simmer --5min", ms: 1500 },
+              { name: "勾芡", run: "thicken --starch", ms: 700 },
+              { name: "尝味", run: "taste --spicy", ms: 600 }
+            ]
+          },
+          {
+            id: "serve", name: "装盘", needs: ["season"],
+            steps: [
+              { name: "装盘", run: "plate --garnish scallion", ms: 600 },
+              { name: "上桌", run: "notify --channel dinner", ms: 400 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "kung-pao",
+      label: "宫保鸡丁",
+      describe: "备料 → 调宫保汁 → 爆炒 → 收汁 → 装盘",
+      file: ".github/workflows/kung-pao.yml",
+      workflow: {
+        name: "宫保鸡丁",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep", name: "备料", needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4", ms: 400 },
+              { name: "准备炒锅", run: "actions/setup-kitchen@v2 --wok 30cm", ms: 450 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore kung-pao", ms: 500 },
+              { name: "切鸡丁", run: "dice --chicken --1cm", ms: 900 },
+              { name: "腌制鸡丁", run: "marinate --chicken --15min", ms: 1500 }
+            ]
+          },
+          {
+            id: "sauce", name: "调宫保汁", needs: ["prep"],
+            steps: [
+              { name: "调汁", run: "mix --sauce --kungpao", ms: 800 },
+              { name: "炸花生米", run: "prepare --peanuts --crispy", ms: 600 },
+              { name: "尝汁", run: "taste --sauce", ms: 500 }
+            ]
+          },
+          {
+            id: "fry", name: "爆炒", needs: ["prep", "sauce"],
+            steps: [
+              { name: "热锅", run: "heat --level high", ms: 800 },
+              { name: "炒鸡丁", run: "stir-fry --chicken --sear", ms: 1300 },
+              { name: "下宫保汁", run: "add --sauce --kungpao", ms: 700 },
+              { name: "下花生", run: "toss --peanuts", ms: 600 }
+            ]
+          },
+          {
+            id: "finish", name: "收汁", needs: ["fry"],
+            steps: [
+              { name: "收汁", run: "thicken --sauce", ms: 700 },
+              { name: "尝味", run: "taste --balance", ms: 600 }
+            ]
+          },
+          {
+            id: "serve", name: "装盘", needs: ["finish"],
+            steps: [
+              { name: "装盘", run: "plate --garnish scallion", ms: 600 },
+              { name: "上桌", run: "notify --channel dinner", ms: 400 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "braised-pork",
+      label: "红烧肉",
+      describe: "备料 → 炒糖色 → 红烧 → 收汁 → 装盘",
+      file: ".github/workflows/braised-pork.yml",
+      workflow: {
+        name: "红烧肉",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep", name: "备料", needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4", ms: 400 },
+              { name: "准备砂锅", run: "actions/setup-kitchen@v2 --claypot", ms: 450 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore pork", ms: 500 },
+              { name: "切五花肉", run: "cut --pork --cube 3cm", ms: 900 },
+              { name: "焯水", run: "blanch --pork --ginger", ms: 1500 }
+            ]
+          },
+          {
+            id: "caramel", name: "炒糖色", needs: ["prep"],
+            steps: [
+              { name: "化冰糖", run: "heat --sugar --low", ms: 1000 },
+              { name: "炒糖色", run: "caramelize --sugar --amber", ms: 800 }
+            ]
+          },
+          {
+            id: "braise", name: "红烧", needs: ["caramel"],
+            steps: [
+              { name: "煸炒五花肉", run: "sear --pork --fat", ms: 1200 },
+              { name: "加酱油", run: "add --soy --wine", ms: 600 },
+              { name: "小火慢炖", run: "simmer --45min", ms: 3000 }
+            ]
+          },
+          {
+            id: "reduce", name: "收汁", needs: ["braise"],
+            steps: [
+              { name: "大火收汁", run: "reduce --sauce", ms: 1500 },
+              { name: "尝味", run: "taste --sweet-savory", ms: 600 }
+            ]
+          },
+          {
+            id: "serve", name: "装盘", needs: ["reduce"],
+            steps: [
+              { name: "装盘", run: "plate --garnish scallion", ms: 600 },
+              { name: "上桌", run: "notify --channel dinner", ms: 400 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "cola-wings",
+      label: "可乐鸡翅",
+      describe: "备料 → 煎香 → 可乐焖煮 → 收汁 → 装盘",
+      file: ".github/workflows/cola-wings.yml",
+      workflow: {
+        name: "可乐鸡翅",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep", name: "备料", needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4", ms: 400 },
+              { name: "准备平底锅", run: "actions/setup-kitchen@v2 --pan", ms: 450 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore wings", ms: 500 },
+              { name: "鸡翅划刀", run: "score --wings --both-sides", ms: 800 },
+              { name: "腌制", run: "marinate --wings --10min", ms: 1200 }
+            ]
+          },
+          {
+            id: "sear", name: "煎香", needs: ["prep"],
+            steps: [
+              { name: "热锅", run: "heat --level medium", ms: 800 },
+              { name: "煎鸡翅", run: "sear --wings --golden", ms: 1200 }
+            ]
+          },
+          {
+            id: "braise", name: "可乐焖煮", needs: ["sear"],
+            steps: [
+              { name: "倒入可乐", run: "add --cola 330ml", ms: 600 },
+              { name: "焖煮", run: "simmer --20min", ms: 2500 }
+            ]
+          },
+          {
+            id: "reduce", name: "收汁", needs: ["braise"],
+            steps: [
+              { name: "收汁", run: "reduce --sauce", ms: 1200 },
+              { name: "尝味", run: "taste --sweet", ms: 600 }
+            ]
+          },
+          {
+            id: "serve", name: "装盘", needs: ["reduce"],
+            steps: [
+              { name: "装盘", run: "plate --sesame", ms: 600 },
+              { name: "上桌", run: "notify --channel dinner", ms: 400 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "steamed-fish",
+      label: "清蒸鲈鱼",
+      describe: "备料 → 腌制 → 清蒸 → 淋油 → 上桌",
+      file: ".github/workflows/steamed-fish.yml",
+      workflow: {
+        name: "清蒸鲈鱼",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep", name: "备料", needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4", ms: 400 },
+              { name: "准备蒸锅", run: "actions/setup-kitchen@v2 --steamer", ms: 450 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore fish", ms: 500 },
+              { name: "处理鲈鱼", run: "clean --fish --scale", ms: 1000 },
+              { name: "鱼身划刀", run: "score --fish", ms: 700 }
+            ]
+          },
+          {
+            id: "marinate", name: "腌制", needs: ["prep"],
+            steps: [
+              { name: "腌制", run: "marinate --fish --10min", ms: 1500 },
+              { name: "铺姜葱", run: "prepare --ginger-scallion", ms: 600 }
+            ]
+          },
+          {
+            id: "steam", name: "清蒸", needs: ["marinate"],
+            steps: [
+              { name: "烧水", run: "boil --water", ms: 1200 },
+              { name: "上锅蒸", run: "steam --8min", ms: 3000 }
+            ]
+          },
+          {
+            id: "finish", name: "淋油", needs: ["steam"],
+            steps: [
+              { name: "热油", run: "heat --oil --smoking", ms: 800 },
+              { name: "淋蒸鱼豉油", run: "add --soy --seasoned", ms: 500 },
+              { name: "撒葱丝", run: "garnish --scallion", ms: 600 }
+            ]
+          },
+          {
+            id: "serve", name: "上桌", needs: ["finish"],
+            steps: [
+              { name: "装盘", run: "plate --fish", ms: 600 },
+              { name: "上桌", run: "notify --channel dinner", ms: 400 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "potato-shreds",
+      label: "酸辣土豆丝",
+      describe: "备料 → 泡水 → 爆炒 → 调味 → 装盘",
+      file: ".github/workflows/potato-shreds.yml",
+      workflow: {
+        name: "酸辣土豆丝",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep", name: "备料", needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4", ms: 400 },
+              { name: "准备炒锅", run: "actions/setup-kitchen@v2 --wok", ms: 450 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore potato", ms: 500 },
+              { name: "削皮", run: "peel --potato", ms: 700 },
+              { name: "切丝", run: "shred --potato --fine", ms: 1100 }
+            ]
+          },
+          {
+            id: "soak", name: "泡水", needs: ["prep"],
+            steps: [
+              { name: "泡水去淀粉", run: "soak --potato --cold", ms: 900 },
+              { name: "沥干", run: "drain --potato", ms: 500 }
+            ]
+          },
+          {
+            id: "stir", name: "爆炒", needs: ["soak"],
+            steps: [
+              { name: "热锅", run: "heat --level high", ms: 800 },
+              { name: "下干辣椒", run: "add --chili --peppercorn", ms: 600 },
+              { name: "爆炒土豆丝", run: "stir-fry --potato --quick", ms: 1200 },
+              { name: "沿锅边淋醋", run: "add --vinegar", ms: 500 }
+            ]
+          },
+          {
+            id: "taste", name: "调味", needs: ["stir"],
+            steps: [
+              { name: "尝味", run: "taste --sour-spicy", ms: 600 },
+              { name: "补盐", run: "adjust --salt", ms: 500 }
+            ]
+          },
+          {
+            id: "serve", name: "装盘", needs: ["taste"],
+            steps: [
+              { name: "装盘", run: "plate --potato", ms: 600 },
+              { name: "上桌", run: "notify --channel dinner", ms: 400 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "curry-chicken",
+      label: "咖喱鸡",
+      describe: "备料 → 煎鸡块 → 咖喱炖煮 → 调味 → 盖饭",
+      file: ".github/workflows/curry-chicken.yml",
+      workflow: {
+        name: "咖喱鸡",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep", name: "备料", needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4", ms: 400 },
+              { name: "准备炖锅", run: "actions/setup-kitchen@v2 --pot", ms: 450 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore curry", ms: 500 },
+              { name: "切鸡块", run: "dice --chicken --3cm", ms: 900 },
+              { name: "切配菜", run: "dice --onion --carrot --potato", ms: 800 }
+            ]
+          },
+          {
+            id: "sear", name: "煎鸡块", needs: ["prep"],
+            steps: [
+              { name: "热锅", run: "heat --level medium", ms: 800 },
+              { name: "煎鸡块", run: "sear --chicken --golden", ms: 1200 }
+            ]
+          },
+          {
+            id: "curry", name: "咖喱炖煮", needs: ["sear"],
+            steps: [
+              { name: "下咖喱块", run: "add --curry --roux", ms: 600 },
+              { name: "加椰浆", run: "add --coconut --200ml", ms: 500 },
+              { name: "小火炖煮", run: "simmer --20min", ms: 2800 }
+            ]
+          },
+          {
+            id: "taste", name: "调味", needs: ["curry"],
+            steps: [
+              { name: "尝味", run: "taste --curry", ms: 600 },
+              { name: "调整浓稠", run: "adjust --thickness", ms: 500 }
+            ]
+          },
+          {
+            id: "serve", name: "盖饭", needs: ["taste"],
+            steps: [
+              { name: "盛米饭", run: "plate --rice", ms: 800 },
+              { name: "浇咖喱", run: "serve --curry", ms: 600 },
+              { name: "上桌", run: "notify --channel dinner", ms: 400 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "garlic-broccoli",
+      label: "蒜蓉西兰花",
+      describe: "备料 → 焯水/蒜蓉 → 快炒 → 装盘",
+      file: ".github/workflows/garlic-broccoli.yml",
+      workflow: {
+        name: "蒜蓉西兰花",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep", name: "备料", needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4", ms: 400 },
+              { name: "准备炒锅", run: "actions/setup-kitchen@v2 --wok", ms: 450 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore broccoli", ms: 500 },
+              { name: "洗西兰花", run: "wash --broccoli", ms: 600 },
+              { name: "切小朵", run: "cut --broccoli --florets", ms: 700 }
+            ]
+          },
+          {
+            id: "blanch", name: "焯水", needs: ["prep"],
+            steps: [
+              { name: "烧水", run: "boil --water", ms: 1200 },
+              { name: "焯西兰花", run: "blanch --broccoli --salt", ms: 800 },
+              { name: "过冰水", run: "chill --ice-water", ms: 500 }
+            ]
+          },
+          {
+            id: "garlic", name: "蒜蓉", needs: ["prep"],
+            steps: [
+              { name: "切蒜末", run: "mince --garlic", ms: 700 },
+              { name: "热油", run: "heat --oil --low", ms: 800 }
+            ]
+          },
+          {
+            id: "stir", name: "快炒", needs: ["blanch", "garlic"],
+            steps: [
+              { name: "爆香蒜蓉", run: "stir-fry --garlic --aromatic", ms: 800 },
+              { name: "下西兰花", run: "stir-fry --broccoli --quick", ms: 1200 },
+              { name: "调味", run: "season --salt --oyster-sauce", ms: 500 }
+            ]
+          },
+          {
+            id: "serve", name: "装盘", needs: ["stir"],
+            steps: [
+              { name: "装盘", run: "plate --broccoli", ms: 600 },
+              { name: "上桌", run: "notify --channel dinner", ms: 400 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "steak",
+      label: "煎牛排",
+      describe: "备料 → 煎制 → 黄油淋面 → 静置 → 装盘",
+      file: ".github/workflows/steak.yml",
+      workflow: {
+        name: "煎牛排",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep", name: "备料", needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4", ms: 400 },
+              { name: "准备铸铁锅", run: "actions/setup-kitchen@v2 --cast-iron", ms: 450 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore steak", ms: 500 },
+              { name: "回温牛排", run: "temper --steak --30min", ms: 1500 },
+              { name: "调味", run: "season --steak --salt-pepper", ms: 700 }
+            ]
+          },
+          {
+            id: "sear", name: "煎制", needs: ["prep"],
+            steps: [
+              { name: "烧热铸铁锅", run: "heat --level high", ms: 1000 },
+              { name: "煎牛排", run: "sear --steak --2min", ms: 1200 }
+            ]
+          },
+          {
+            id: "baste", name: "黄油淋面", needs: ["sear"],
+            steps: [
+              { name: "加黄油蒜香", run: "add --butter --garlic", ms: 600 },
+              { name: "淋面", run: "baste --steak", ms: 900 }
+            ]
+          },
+          {
+            id: "rest", name: "静置", needs: ["baste"],
+            steps: [
+              { name: "静置", run: "rest --steak --5min", ms: 2000 },
+              { name: "切片", run: "slice --steak", ms: 700 }
+            ]
+          },
+          {
+            id: "serve", name: "装盘", needs: ["rest"],
+            steps: [
+              { name: "装盘", run: "plate --steak --rosemary", ms: 600 },
+              { name: "上桌", run: "notify --channel dinner", ms: 400 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "spicy-pot",
+      label: "麻辣香锅",
+      describe: "备料 → 焯水/炒香料 → 香锅快炒 → 装盘",
+      file: ".github/workflows/spicy-pot.yml",
+      workflow: {
+        name: "麻辣香锅",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep", name: "备料", needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4", ms: 400 },
+              { name: "准备炒锅", run: "actions/setup-kitchen@v2 --wok", ms: 450 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore spicy-pot", ms: 500 },
+              { name: "洗蔬菜", run: "wash --veg --mushroom", ms: 700 },
+              { name: "切肉片", run: "slice --beef --thin", ms: 900 }
+            ]
+          },
+          {
+            id: "blanch", name: "焯水", needs: ["prep"],
+            steps: [
+              { name: "烧水", run: "boil --water", ms: 1200 },
+              { name: "焯蔬菜", run: "blanch --veg", ms: 1000 },
+              { name: "沥水", run: "drain --veg", ms: 500 }
+            ]
+          },
+          {
+            id: "spice", name: "炒香料", needs: ["prep"],
+            steps: [
+              { name: "热油", run: "heat --oil", ms: 800 },
+              { name: "炒香料", run: "fry --spices --aromatic", ms: 900 }
+            ]
+          },
+          {
+            id: "stir", name: "香锅快炒", needs: ["blanch", "spice"],
+            steps: [
+              { name: "下肉片", run: "stir-fry --beef --quick", ms: 1000 },
+              { name: "下蔬菜", run: "stir-fry --veg --high-heat", ms: 1400 },
+              { name: "调味", run: "season --spicy --numbing", ms: 600 }
+            ]
+          },
+          {
+            id: "serve", name: "装盘", needs: ["stir"],
+            steps: [
+              { name: "装盘", run: "plate --sesame --cilantro", ms: 600 },
+              { name: "上桌", run: "notify --channel dinner", ms: 400 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "sweet-sour-pork",
+      label: "糖醋里脊",
+      describe: "备料 → 挂糊 → 复炸 → 糖醋汁 → 装盘",
+      file: ".github/workflows/sweet-sour-pork.yml",
+      workflow: {
+        name: "糖醋里脊",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep", name: "备料", needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4", ms: 400 },
+              { name: "准备炒锅", run: "actions/setup-kitchen@v2 --wok", ms: 450 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore pork", ms: 500 },
+              { name: "切里脊", run: "cut --pork --strips", ms: 900 },
+              { name: "腌制", run: "marinate --pork --10min", ms: 1200 }
+            ]
+          },
+          {
+            id: "batter", name: "挂糊", needs: ["prep"],
+            steps: [
+              { name: "调面糊", run: "mix --batter", ms: 800 },
+              { name: "挂糊", run: "coat --pork --batter", ms: 700 }
+            ]
+          },
+          {
+            id: "fry", name: "复炸", needs: ["batter"],
+            steps: [
+              { name: "热油", run: "heat --oil --hot", ms: 1000 },
+              { name: "初炸", run: "deep-fry --pork --first", ms: 1500 },
+              { name: "复炸", run: "deep-fry --pork --second", ms: 1200 }
+            ]
+          },
+          {
+            id: "sauce", name: "糖醋汁", needs: ["fry"],
+            steps: [
+              { name: "调糖醋汁", run: "mix --sauce --sweet-sour", ms: 800 },
+              { name: "熬汁", run: "reduce --sauce", ms: 700 },
+              { name: "裹汁", run: "toss --pork --sauce", ms: 600 }
+            ]
+          },
+          {
+            id: "serve", name: "装盘", needs: ["sauce"],
+            steps: [
+              { name: "装盘", run: "plate --sesame", ms: 600 },
+              { name: "上桌", run: "notify --channel dinner", ms: 400 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "pasta",
+      label: "意大利面",
+      describe: "备料 → 煮面/熬酱 → 拌面 → 装盘",
+      file: ".github/workflows/pasta.yml",
+      workflow: {
+        name: "意大利面",
+        on: "workflow_dispatch",
+        jobs: [
+          {
+            id: "prep", name: "备料", needs: [],
+            steps: [
+              { name: "取菜谱仓库", run: "actions/checkout@v4", ms: 400 },
+              { name: "准备汤锅", run: "actions/setup-kitchen@v2 --stockpot", ms: 450 },
+              { name: "从冰箱取料", run: "actions/cache@v4 --restore pasta", ms: 500 },
+              { name: "洗蔬菜", run: "wash --veg --tomato", ms: 600 },
+              { name: "切配菜", run: "chop --onion --garlic", ms: 700 }
+            ]
+          },
+          {
+            id: "boil", name: "煮面", needs: ["prep"],
+            steps: [
+              { name: "烧水", run: "boil --water --salted", ms: 1500 },
+              { name: "煮意面", run: "cook --pasta --al-dente", ms: 1800 },
+              { name: "留面汤", run: "reserve --pasta-water", ms: 500 }
+            ]
+          },
+          {
+            id: "sauce", name: "熬酱", needs: ["prep"],
+            steps: [
+              { name: "热橄榄油", run: "heat --oil --olive", ms: 800 },
+              { name: "炒香洋葱", run: "stir-fry --onion --garlic", ms: 900 },
+              { name: "下番茄", run: "add --tomato --sauce", ms: 1200 }
+            ]
+          },
+          {
+            id: "combine", name: "拌面", needs: ["boil", "sauce"],
+            steps: [
+              { name: "面入酱锅", run: "toss --pasta --sauce", ms: 900 },
+              { name: "调味", run: "season --basil --cheese", ms: 600 }
+            ]
+          },
+          {
+            id: "serve", name: "装盘", needs: ["combine"],
+            steps: [
+              { name: "装盘", run: "plate --pasta --basil", ms: 600 },
+              { name: "上桌", run: "notify --channel dinner", ms: 400 }
+            ]
+          }
+        ]
+      }
     }
   ];
+
+  DISH_PRESETS.forEach(function (preset) {
+    preset.workflow = tuneWorkflow(preset.workflow);
+  });
 
   /* ========================================================================
      3. 常量与 DOM
@@ -1686,7 +2390,6 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
   const modalEl       = document.getElementById('modal');
   const editorEl      = document.getElementById('editor');
   const editStatusEl  = document.getElementById('editStatus');
-  const presetListEl  = document.getElementById('presetList');
   const closeEditBtn  = document.getElementById('closeEdit');
   const cancelEditBtn = document.getElementById('cancelEdit');
   const applyEditBtn  = document.getElementById('applyEdit');
@@ -1868,10 +2571,14 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
       if (raw) {
         const stored = JSON.parse(raw);
         validateWorkflow(stored);
-        return normalizeWorkflow(stored);
+        const normalized = normalizeWorkflow(stored);
+        const knownPreset = DISH_PRESETS.some(function (preset) {
+          return preset.workflow.name === normalized.name;
+        });
+        return knownPreset ? tuneWorkflow(normalized) : normalized;
       }
     } catch (err) { /* 本地数据损坏时回退到默认配置 */ }
-    return deepCopy(DEFAULT_WORKFLOW);
+    return tuneWorkflow(DEFAULT_WORKFLOW);
   }
 
   function loadSpeed() {
@@ -2167,7 +2874,7 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
       : (running ? 'Cancel this run' : 'Re-run all jobs (Ctrl / ⌘ + Enter)');
     runBtn.disabled = graphError;
     editBtn.disabled = running;
-    editBtn.title = running ? 'Editing is disabled while running' : 'Edit workflow / load a dish example';
+    editBtn.title = running ? 'Editing is disabled while running' : 'Edit workflow JSON';
     resetBtn.disabled = false;
     Array.prototype.forEach.call(workflowNavEl.children, function (btn) {
       btn.disabled = running;
@@ -2611,15 +3318,17 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
       btn.addEventListener('click', function () { switchWorkflow(preset.id); });
       workflowNavEl.appendChild(btn);
     });
-  }
-
-  function syncWorkflowNav() {
+  }  function syncWorkflowNav() {
     const active = activePreset();
     Array.prototype.forEach.call(workflowNavEl.children, function (btn) {
       const isActive = !!active && btn.dataset.workflow === active.id;
       btn.classList.toggle('is-active', isActive);
-      if (isActive) btn.setAttribute('aria-current', 'true');
-      else btn.removeAttribute('aria-current');
+      if (isActive) {
+        btn.setAttribute('aria-current', 'true');
+        if (typeof btn.scrollIntoView === 'function') btn.scrollIntoView({ block: 'nearest' });
+      } else {
+        btn.removeAttribute('aria-current');
+      }
       btn.disabled = running;
     });
     workflowFileEl.textContent = active ? active.file : '.github/workflows/noodles.yml';
@@ -2638,35 +3347,6 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
     toast('Switched to “' + preset.label + '”');
   }
 
-  function renderPresetChips() {
-    presetListEl.replaceChildren();
-    DISH_PRESETS.forEach(function (preset) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'preset-chip';
-      btn.dataset.preset = preset.id;
-      btn.textContent = preset.label;
-      btn.title = preset.describe || ('载入「' + preset.label + '」示例');
-      btn.addEventListener('click', function () { loadPreset(preset.id); });
-      presetListEl.appendChild(btn);
-    });
-  }
-
-  function loadPreset(id) {
-    const matched = DISH_PRESETS.filter(function (preset) { return preset.id === id; });
-    if (!matched.length) return;
-    const preset = matched[0];
-    editorEl.value = JSON.stringify(preset.workflow, null, 2);
-    parseEditor();
-    editorEl.focus();
-    editorEl.setSelectionRange(0, 0);
-    editorEl.scrollTop = 0;
-    Array.prototype.forEach.call(presetListEl.children, function (btn) {
-      btn.classList.toggle('is-active', btn.dataset.preset === id);
-    });
-    toast('Loaded “' + preset.label + '” example. Click Apply to use it.');
-  }
-
   function openEditor() {
     modalReturnFocus = document.activeElement;
     editorEl.value = JSON.stringify(workflow, null, 2);
@@ -2674,9 +3354,6 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
     editorEl.focus();
     setBackgroundInert(true);
     parseEditor();
-    Array.prototype.forEach.call(presetListEl.children, function (btn) {
-      btn.classList.remove('is-active');
-    });
     window.requestAnimationFrame(function () {
       if (modalEl.hidden) return;
       editorEl.focus();
@@ -2718,7 +3395,11 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
   }
 
   function restoreDefaults() {
-    loadPreset('noodle');
+    editorEl.value = JSON.stringify(workflow, null, 2);
+    parseEditor();
+    editorEl.focus();
+    editorEl.setSelectionRange(0, 0);
+    toast('Reverted to the current workflow');
   }
 
   function trapFocus(event) {
@@ -2943,7 +3624,6 @@ textarea:focus{border-color:var(--gh-accent); box-shadow:0 0 0 3px var(--gh-acce
   speedEl.value = String(speed);
   speedValEl.textContent = formatSpeed(speed);
 
-  renderPresetChips();
   renderWorkflowNav();
   bindEvents();
   render(workflow);
