@@ -112,9 +112,6 @@ h1{
   font-family:var(--mono); font-size:11.5px; color:var(--text);
   min-width:30px; text-align:right; font-variant-numeric:tabular-nums;
 }
-.rate input[type="range"]{width:64px}
-.rate output{min-width:36px}
-.speed input[type="range"]:disabled{opacity:.45; cursor:not-allowed}
 
 button{
   display:inline-flex; align-items:center; justify-content:center; gap:6px;
@@ -465,6 +462,7 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   padding:8px 13px; border-radius:9px; background:#1b2430;
   border:1px solid var(--border-strong); color:var(--text); font-size:12.5px;
   box-shadow:0 18px 40px -22px #000; animation:toast-in .2s ease both;
+  max-width:min(440px, calc(100vw - 44px)); word-break:break-word;
 }
 .toast.is-out{animation:toast-out .18s ease forwards}
 .toast.toast-error{border-color:rgba(248,81,73,.5); color:#ffb4b0}
@@ -526,7 +524,6 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   .toolbar{width:100%; justify-content:flex-start}
   .run-btn{flex:1 1 auto}
   .speed{order:-1}
-  .speed span{display:none}
   .runbar{padding:8px 14px; gap:10px}
   .run-meta{display:none}
   .progress{flex-basis:100%; order:5}
@@ -580,12 +577,6 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       <input type="range" id="speed" min="0.5" max="4" step="0.5" value="1"
              aria-label="模拟速度" title="调整模拟速度">
       <output id="speedVal" for="speed">1×</output>
-    </label>
-    <label class="speed rate" for="failureRate">
-      <span>随机故障</span>
-      <input type="range" id="failureRate" min="0" max="100" step="1" value="10"
-             aria-label="随机故障率" title="每个 job 随机失败的概率，用于演示失败传播">
-      <output id="failureRateVal" for="failureRate">10%</output>
     </label>
     <span class="toolbar-sep" aria-hidden="true"></span>
     <button id="editBtn" type="button" title="编辑 workflow 配置">编辑</button>
@@ -662,9 +653,10 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
       <button class="modal-close" id="closeEdit" type="button" aria-label="关闭编辑弹窗">✕</button>
     </div>
     <div class="hint">
-      顶层：<code>name</code> <code>on</code> <code>jobs</code> <code>failureRate</code>（0–1，每个 job 随机失败概率）　·　
+      顶层：<code>name</code> <code>on</code> <code>jobs</code>　·　
       job：<code>id</code> <code>name</code> <code>needs</code> <code>steps</code>　·　
-      step：<code>name</code> <code>run</code> <code>ms</code> <code>willFail</code> <code>failReason</code>
+      step：<code>name</code> <code>run</code> <code>ms</code> <code>willFail</code> <code>failReason</code><br>
+      给任意 step 加 <code>willFail: true</code> 和 <code>failReason</code>（例如“面条夹生”）即可演练失败传播。
     </div>
     <textarea id="editor" spellcheck="false" autocomplete="off" aria-label="workflow JSON 内容"></textarea>
     <div class="modal-meta">
@@ -705,7 +697,6 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   const DEFAULT_WORKFLOW = {
     name: "煮一碗面",
     on: "workflow_dispatch",
-    failureRate: 0.1,
     jobs: [
       {
         id: "prep",
@@ -785,8 +776,6 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   const triggerBadgeEl = document.getElementById('triggerBadge');
   const speedEl       = document.getElementById('speed');
   const speedValEl    = document.getElementById('speedVal');
-  const failureRateEl = document.getElementById('failureRate');
-  const failureRateValEl = document.getElementById('failureRateVal');
   const editBtn       = document.getElementById('editBtn');
   const resetBtn      = document.getElementById('resetBtn');
   const runBtn        = document.getElementById('runBtn');
@@ -907,13 +896,6 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     if (candidate.on != null && typeof candidate.on !== 'string') {
       throw new Error('on 必须是字符串');
     }
-    if (candidate.failureRate != null &&
-        (typeof candidate.failureRate !== 'number' ||
-         !Number.isFinite(candidate.failureRate) ||
-         candidate.failureRate < 0 ||
-         candidate.failureRate > 1)) {
-      throw new Error('failureRate 必须是 0 到 1 之间的数字');
-    }
     if (!Array.isArray(candidate.jobs) || candidate.jobs.length === 0) {
       throw new Error('缺少非空的 jobs 数组');
     }
@@ -975,9 +957,6 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
     return {
       name: candidate.name && candidate.name.trim() ? candidate.name.trim() : '未命名 workflow',
       on: candidate.on && candidate.on.trim() ? candidate.on.trim() : 'workflow_dispatch',
-      failureRate: typeof candidate.failureRate === 'number'
-        ? clamp(candidate.failureRate, 0, 1)
-        : 0.1,
       jobs: candidate.jobs.map(function (job) {
         return {
           id: job.id.trim(),
@@ -1074,7 +1053,6 @@ textarea:focus{outline:none; border-color:rgba(88,166,255,.6); box-shadow:0 0 0 
   function render(wf) {
     wfNameEl.textContent = wf.name || 'workflow';
     triggerBadgeEl.textContent = wf.on || 'workflow_dispatch';
-    syncFailureRateUI(wf);
     document.title = (wf.name || 'workflow') + ' · 煮面 CI';
     jobEls.clear();
     stepEls.clear();
